@@ -1,22 +1,17 @@
 {
-  "name": "bluecreate",
+  "name": "CreatePages",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "nuxt-ts",
-    "build": "nuxt-ts build",
-    "start": "nuxt-ts start",
-    "generate": "nuxt-ts generate"
+    "dev": "nuxt",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate"
   },
   "dependencies": {
-    "@nuxt/typescript-runtime": "^2.0.1",
-    "bootstrap": "^4.6.0",
-    "bootstrap-vue": "^2.21.2",
+    "ant-design-vue": "^1.7.2",
     "core-js": "^3.8.3",
     "nuxt": "^2.14.12"
   },
-  "devDependencies": {
-    "@nuxt/types": "^2.14.12",
-    "@nuxt/typescript-build": "^2.0.4"
-  }
+  "devDependencies": {}
 }

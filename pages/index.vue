@@ -3,7 +3,7 @@
     <div>
       <Logo />
       <h1 class="title">
-        bluecreate
+        CreatePages
       </h1>
       <div class="links">
         <a
@@ -27,10 +27,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import Vue from 'vue'
-
-export default Vue.extend({})
+<script>
+export default {}
 </script>
 
 <style>
