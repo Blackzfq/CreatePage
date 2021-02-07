@@ -25,3 +25,9 @@ $ npm run generate
 
 # 项目是基于Vue的Nuxt.js 2.x进行开发的
 # 因为既然是自由定制网页,SEO方面也希望有很好的支持，本人学识有限目前还没法完全参透Vue SSR的情况，直接开箱即用了NUXT 望海涵
+```
+
+## 组件说明
+```bash
+# 基于蚂蚁金服的 Ant-Design-vue
+```
