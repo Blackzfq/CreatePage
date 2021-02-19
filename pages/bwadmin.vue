@@ -52,16 +52,16 @@
         layout: 'Admin',
         data() {
             const path = [
-                {title:'博客管理',content:'/bwadmin/blogcms',icon:'video-camera',key:'2'},
-                {title:'产品管理',content:'/bwadmin/productcms',icon:'upload',key:'3'},
-                {title:'分类管理',content:'/bwadmin/classifycms',icon:'bar-chart',key:'4'},
-                {title:'页面管理',content:'/bwadmin/pagecms',icon:'cloud-o',key:'5'},
-                {title:'图片管理',content:'/bwadmin/imagecms',icon:'appstore-o',key:'6'},
-                {title:'询盘中心',content:'/bwadmin/inquirycms',icon:'team',key:'7'},
-                {title:'语言设置',content:'/bwadmin/languagecms',icon:'shop',key:'8'},
-                {title:'统计分析',content:'/bwadmin/statisticscms',icon:'shop',key:'9'},
-                {title:'权限管理',content:'/bwadmin/jurisdictioncms',icon:'shop',key:'10'},
-                {title:'相关链接',content:'/bwadmin/relatedcms',icon:'shop',key:'11'}
+                { title: '博客管理', content: '/bwadmin/blogcms', icon: 'video-camera', key: '2' },
+                { title: '产品管理', content: '/bwadmin/productcms', icon: 'upload', key: '3' },
+                { title: '分类管理', content: '/bwadmin/classifycms', icon: 'bar-chart', key: '4' },
+                { title: '页面管理', content: '/bwadmin/pagecms', icon: 'cloud-o', key: '5' },
+                { title: '图片管理', content: '/bwadmin/imagecms', icon: 'appstore-o', key: '6' },
+                { title: '询盘中心', content: '/bwadmin/inquirycms', icon: 'team', key: '7' },
+                { title: '语言设置', content: '/bwadmin/languagecms', icon: 'shop', key: '8' },
+                { title: '统计分析', content: '/bwadmin/statisticscms', icon: 'shop', key: '9' },
+                { title: '权限管理', content: '/bwadmin/jurisdictioncms', icon: 'shop', key: '10' },
+                { title: '相关链接', content: '/bwadmin/relatedcms', icon: 'shop', key: '11' }
             ];
             const panes = [
                 { title: '首页', content: '/bwadmin/homecms', key: '1', closable: false },
@@ -80,7 +80,7 @@
                 console.log(key);
             },
             onChange(activeKey) {
-                const path=this.panes.filter(pen=>pen.key == activeKey)
+                const path = this.panes.filter(pen => pen.key == activeKey)
                 this.selectedKeys[0] = activeKey + ''
                 this.$router.push(`${path[0].content}`)
             },
@@ -100,16 +100,16 @@
                 if (panes.length && activeKey === targetKey) {
                     if (lastIndex >= 0) {
                         activeKey = panes[lastIndex].key;
-                        activeContent=panes[lastIndex].content;
+                        activeContent = panes[lastIndex].content;
                     } else {
                         activeKey = panes[0].key;
-                        activeContent=panes[0].content;
+                        activeContent = panes[0].content;
                     }
                 }
                 this.panes = panes;
                 this.activeKey = activeKey;
                 this.selectedKeys[0] = activeKey + ''
-                if(activeContent)this.$router.push(`${activeContent}`)
+                if (activeContent) this.$router.push(`${activeContent}`)
             },
             /*********************************************************************** 导航菜单 ***********************************************************************/
             onSelect({ item, key }) {
@@ -117,9 +117,9 @@
                 let blo = false
                 const paneslist = this.panes
                 const panesItem = new Object()
-                const newContent=this.path.filter(item=>item.key == key)
+                const newContent = this.path.filter(item => item.key == key)
                 panesItem.title = `${item.$el.innerText}`
-                panesItem.content =newContent[0].content
+                panesItem.content = newContent[0].content
                 panesItem.key = key
                 paneslist.forEach(item => {
                     if (JSON.stringify(item) == JSON.stringify(panesItem)) {
