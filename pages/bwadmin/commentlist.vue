@@ -1,11 +1,11 @@
 <template>
-    <div class="ClassifyCms">
-        ClassifyCms
+    <div class="CommentList">
+        CommentList
     </div>
 </template>
 <script>
 export default{
-    name:'ClassifyCms',
+    name:'CommentList',
     data(){
 
         return{

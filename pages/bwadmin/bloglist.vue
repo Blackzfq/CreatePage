@@ -1,11 +1,11 @@
 <template>
-    <div class="ProductCms">
-        ProductCms
+    <div class="BlogList">
+        BlogList
     </div>
 </template>
 <script>
 export default{
-    name:'ProductCms',
+    name:'BlogList',
     data(){
 
         return{

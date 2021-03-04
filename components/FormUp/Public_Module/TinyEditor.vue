@@ -1,0 +1,154 @@
+<!-- 
+自定义方法：
+initialize  初始化文本数据   Function    this.$refs.editor.initialize() 
+-->
+
+<template>
+    <div class="TinyEditor">
+        <Editor v-model="value" :init="init"></Editor>
+    </div>
+</template>
+<script>
+    // 引入基本文件
+    import Editor from '@tinymce/tinymce-vue'
+    //在客户端环境引入
+    let tinymce
+    if (process.client) {
+        tinymce = require('tinymce/tinymce')
+        require('tinymce/themes/silver')
+        require('tinymce/icons/default/icons.min.js')
+        //引入编辑器的插件
+        require('tinymce/plugins/image')// 插入上传图片插件
+        require('tinymce/plugins/media')// 插入视频插件
+        require('tinymce/plugins/table')// 插入表格插件
+        require('tinymce/plugins/lists')// 列表插件
+        require('tinymce/plugins/wordcount')// 字数统计插件
+        require('tinymce/plugins/link')
+        require('@/static/tinymce/powerpaste/plugin.min.js')
+    }
+
+    //引入方法
+    // import { getOssSignatures, upFiletoAlioss } from '@/assets/api'
+
+
+
+    export default {
+        name: 'TinyEditor',
+        components: { Editor },
+        watch: {
+            value(newVal) {
+                this.propsParent(newVal)
+            }
+        },
+        props: {
+            scene: {
+                type: String,
+                default: "article"
+            }
+        },
+        data() {
+
+            return {
+                value: '',
+                init: {
+                    language_url: '/tinymce/langs/zh_CN.js',// 语言包的路径
+                    language: 'zh_CN',//语言
+                    external_plugins: { 'powerpaste': '/tinymce/powerpaste/plugin.min.js' },
+                    plugins: [
+                        'powerpaste', // plugins中，用powerpaste替换原来的paste
+                        //...
+                    ],
+                    powerpaste_word_import: 'propmt',// 参数可以是propmt, merge, clear，效果自行切换对比
+                    powerpaste_html_import: 'propmt',// propmt, merge, clear
+                    powerpaste_allow_local_images: true,
+                    paste_data_images: true,
+                    //配置
+                    skin_url: '/tinymce/skins/ui/oxide',// skin路径
+                    height: 600,//编辑器高度
+                    branding: false,//是否禁用“Powered by TinyMCE”
+                    // menubar: 'edit',//顶部菜单栏显示,
+                    menubar: 'edit insert view format table tools fontsizeselect fontselect',
+                    menu: {
+                        edit: { title: '编辑', items: 'undo redo | cut copy paste pastetext | selectall' },
+                        insert: { title: '插入', items: 'link image media | template hr' },
+                        view: { title: '查看', items: 'visualaid' },
+                        format: { title: '格式', items: 'bold italic underline strikethrough superscript subscript | formats | removeformat' },
+                        table: { title: '表格', items: 'inserttable tableprops deletetable | cell row column' },
+                        tools: { title: '工具', items: 'spellchecker code' }
+                    },
+                    // images_upload_handler: async (blobInfo, success, failure) => {//自定义上传图片
+                    //     const params = {
+                    //         bucket: 'public',
+                    //         type: 'image',
+                    //         fileName: blobInfo.blob().name,
+                    //         scene: this.scene
+                    //     }
+                    //     const { data } = await getOssSignatures(params)
+                    //     const upLoadingImgData = new FormData()
+                    //     upLoadingImgData.append("key", data.data.dir)
+                    //     upLoadingImgData.append("policy", data.data.policy)
+                    //     upLoadingImgData.append("OSSAccessKeyId", data.data.access_id)
+                    //     upLoadingImgData.append("signature", data.data.signature)
+                    //     upLoadingImgData.append("callback", data.data.callback)
+                    //     upLoadingImgData.append("file", blobInfo.blob())
+                    //     await this.upImgFiletoAlioss(upLoadingImgData, `https://xintai-test-public.oss-cn-hangzhou.aliyuncs.com/${data.data.dir}`)
+                    //     success(`https://xintai-test-public.oss-cn-hangzhou.aliyuncs.com/${data.data.dir}`);
+                    //     failure(`图片上传失败`)
+                    // },
+                    content_style: "p{color: #666666;} span{color: #666666;}",
+                    table_default_styles: { 'border-color': '#000000', 'width': '100%' },
+                    fontsize_formats: '11px 12px 14px 16px 18px 24px 36px 48px 50px 56px 60px 64px',
+                    plugins: 'lists image media table wordcount link',
+                    toolbar: 'undo redo | fontsizeselect |  formatselect | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | lists CardBtn image media link',
+                    placeholder: '本网页无缓存功能，请不要再编辑时刷新，以免内容丢失。可插入图片或YouTube视频',
+                    setup: (editor) => {
+                        // 注册一个icon
+                        editor.ui.registry.addIcon(
+                            "shopping-cart",
+                            `<svg viewBox="64 64 896 896" data-icon="folder-open" width="1.5em" height="1.5em" fill="currentColor" aria-hidden="true" focusable="false" class=""><path d="M928 444H820V330.4c0-17.7-14.3-32-32-32H473L355.7 186.2a8.15 8.15 0 0 0-5.5-2.2H96c-17.7 0-32 14.3-32 32v592c0 17.7 14.3 32 32 32h698c13 0 24.8-7.9 29.7-20l134-332c1.5-3.8 2.3-7.9 2.3-12 0-17.7-14.3-32-32-32zM136 256h188.5l119.6 114.4H748V444H238c-13 0-24.8 7.9-29.7 20L136 643.2V256zm635.3 512H159l103.3-256h612.4L771.3 768z"></path></svg>`
+                        );
+                        // 注册一个自定义的按钮
+                        editor.ui.registry.addButton("CardBtn", {
+                            icon: `shopping-cart`,
+                            //自定义按钮的方法
+                            onAction: function (_) {
+                                editor.insertContent(
+                                    `<img class='goodsImg' src='https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3363295869,2467511306&fm=26&gp=0.jpg'/>`
+                                );
+                            }
+                        });
+                    }
+                }
+            }
+        },
+        mounted() {
+            // Initialize the app
+            this.$nextTick(() => {
+                if (process.client) {
+                    window.tinymce.init({});
+                }
+            })
+        },
+        methods: {
+            initialize(val) {
+                val ? this.value = val : this.value = ''
+            },
+            propsParent(val) {
+                this.$emit('getTinyValue', val)
+            },
+            //========================================================上传阿里云服务器===============================================
+            async upImgFiletoAlioss(fromdata) {
+                try {
+                    await upFiletoAlioss(fromdata)
+                    console.log('上传alioss成功')
+
+                } catch (error) {
+                    console.log('上传失败了')
+                    console.log(error)
+                }
+            },
+        }
+    }
+</script>
+<style scoped lang="scss">
+</style>

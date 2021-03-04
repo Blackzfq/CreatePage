@@ -1,6 +1,6 @@
 <template>
   <div class="Layouts_PageEitor">
-    <a-row type="flex">
+    <a-row type="flex" style="flex-wrap:nowrap">
       <a-col flex="40px" style="background-color: #001529;">
         <PageEditorMenu/>
       </a-col>
@@ -28,7 +28,9 @@
   }
 
   .Layouts_PageEitor {
+    min-width: 758px;
     height: 100vh;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 </style>

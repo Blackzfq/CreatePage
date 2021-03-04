@@ -15,10 +15,11 @@
     "ant-design-vue": "^1.7.2",
     "axios": "^0.20.0",
     "core-js": "^3.8.3",
-    "nuxt": "^2.14.12",
     "normalize.css": "^8.0.1",
+    "nuxt": "^2.14.12",
     "swiper": "^5.3.7",
     "tinymce": "^5.5.1",
+    "vcolorpicker": "^1.1.0",
     "vue-awesome-swiper": "^4.1.0",
     "vue-cropper": "^0.5.5"
   },

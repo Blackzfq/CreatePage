@@ -24,7 +24,7 @@
         </ul>
         <!-- 视图 -->
         <ul class="View">
-            <li v-for="(item,index) in view" :key="index">
+            <li v-for="(item,index) in view" :key="index" @click="showPageView(index)">
                 <a-tooltip placement="rightTop">
                     <template slot="title">
                         <span>{{item.title}}</span>
@@ -43,14 +43,14 @@
             return {
                 menu: [{ title: '返回工作台', ico: 'home', components: '1' }, { title: '预览', ico: 'eye', components: '2' }, { title: '添加模块', ico: 'plus', components: '3' }, { title: '页面管理', ico: 'file', components: '4' }],
                 tool: [{ title: '保存', ico: 'save' }, { title: '更新', ico: 'reload' }],
-                view: [{ title: '桌面', ico: 'home' }, { title: '平板', ico: 'eye' }, { title: '手机', ico: 'plus' }]
+                view: [{ title: '桌面', ico: 'desktop' }, { title: '平板', ico: 'tablet' }, { title: '手机', ico: 'mobile' }]
             }
         },
         methods: {
             showDrawer(val) {
                 switch (val) {
                     case '1':
-                    this.$router.go(-1);
+                        this.$router.go(-1);
                         break;
                     case '2':
                         this.$notification.open({
@@ -77,6 +77,22 @@
                         break;
                 }
             },
+            showPageView(val) {
+                switch (val) {
+                    case 0:
+                        this.$store.commit('PagesEitorMenu/SET_ViewBox', 'desktop')
+                        break;
+                    case 1:
+                        this.$store.commit('PagesEitorMenu/SET_ViewBox', 'tablet')
+                        break;
+                    case 2:
+                        this.$store.commit('PagesEitorMenu/SET_ViewBox', 'mobile')
+                        break;
+                    default:
+                        console.log(val)
+                        break
+                }
+            }
         }
     }
 </script>

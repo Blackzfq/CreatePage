@@ -5,8 +5,17 @@
             <a-layout-sider :style="{ overflow: 'auto', height: '100vh', position: 'fixed', left: 0 }">
                 <div class="logo" />
                 <a-menu theme="dark" mode="inline" :default-selected-keys="['1']" :selectedKeys="selectedKeys"
-                    @select="onSelect">
-                    <a-menu-item v-for="(item,index) in path" :key="item.key">
+                    @select="onSelect" :open-keys="openKeys" @openChange="onOpenChange">
+                    <a-sub-menu v-for="(item,index) in subMenu" :key="item.key">
+                        <span slot="title">
+                            <a-icon :type="item.icon" />
+                            <span class="nav-text">{{item.title}}</span>
+                        </span>
+                        <a-menu-item v-for="(childItem,childindex) in item.children" :key="childItem.key">
+                            {{childItem.title}}
+                        </a-menu-item>
+                    </a-sub-menu>
+                    <a-menu-item v-for="(item,index) in subItem" :key="item.key">
                         <a-icon :type="item.icon" />
                         <span class="nav-text">{{item.title}}</span>
                     </a-menu-item>
@@ -26,15 +35,15 @@
                     </a-popover>
                 </a-layout-header>
                 <!---------------------------------------- 内容区 ---------------------------------------->
-                <a-layout-content
-                    :style="{ margin: '24px 16px 0',height:'calc(100vh - 64px - 24px - 69px)',overflow:'hidden'}">
+                <a-layout-content class="card-containe"
+                    :style="{ margin: '24px 0px 0',height:'calc(100vh - 64px - 24px - 69px)',overflow:'hidden'}">
                     <!---------------------------------------- 标签页 ---------------------------------------->
                     <a-tabs v-model="activeKey" hide-add type="editable-card" @edit="onEdit" @change="onChange"
                         style="margin-bottom: 0;">
                         <a-tab-pane v-for="pane in panes" :key="pane.key" :tab="pane.title" :closable="pane.closable">
                             <div
-                                :style="{ padding: '24px', background: '#fff',height:'calc(100vh - 64px - 24px - 69px - 56px)','overflow': 'auto'}">
-                                <NuxtChild keep-alive />
+                                :style="{ padding: '24px',height:'calc(100vh - 64px - 24px - 69px - 56px)','overflow': 'auto'}">
+                                <NuxtChild keep-alive ref="BW_Childmain" />
                             </div>
                         </a-tab-pane>
                     </a-tabs>
@@ -47,41 +56,165 @@
     </div>
 </template>
 <script>
+    import { mapState, mapActions, mapMutations } from 'vuex'
     export default {
         name: 'BWadminHome',
         layout: 'Admin',
-        data() {
-            const path = [
-                { title: '博客管理', content: '/bwadmin/blogcms', icon: 'video-camera', key: '2' },
-                { title: '产品管理', content: '/bwadmin/productcms', icon: 'upload', key: '3' },
-                { title: '分类管理', content: '/bwadmin/classifycms', icon: 'bar-chart', key: '4' },
-                { title: '页面管理', content: '/bwadmin/pagecms', icon: 'cloud-o', key: '5' },
-                { title: '图片管理', content: '/bwadmin/imagecms', icon: 'appstore-o', key: '6' },
-                { title: '询盘中心', content: '/bwadmin/inquirycms', icon: 'team', key: '7' },
-                { title: '语言设置', content: '/bwadmin/languagecms', icon: 'shop', key: '8' },
-                { title: '统计分析', content: '/bwadmin/statisticscms', icon: 'shop', key: '9' },
-                { title: '权限管理', content: '/bwadmin/jurisdictioncms', icon: 'shop', key: '10' },
-                { title: '相关链接', content: '/bwadmin/relatedcms', icon: 'shop', key: '11' }
-            ];
-            const panes = [
-                { title: '首页', content: '/bwadmin/homecms', key: '1', closable: false },
-            ];
-            return {
-                selectedKeys: ['1'],
-                activeKey: panes[0].key,
-                path,
-                panes,
-                newTabIndex: 0,
+        asyncData({ route, redirect }) {
+            if (route.name == 'bwadmin') {
+                redirect('/bwadmin/homecms')
             }
         },
+        computed: {
+            subMenu() {
+                return this.path.filter(item => item.children)
+            },
+            subItem() {
+                return this.path.filter(item => item.content)
+            },
+            menuPath() {
+                let arr = [{
+                    title: '首页',
+                    content: '/bwadmin/homecms',
+                    key: '1',
+                    closable: false
+                }]
+                const path = this.path.filter(item => item.content)
+                const child = this.path.filter(item => item.children)
+                child.forEach(item => {
+                    arr = [...arr, ...item.children]
+                })
+                return [...arr, ...path]
+            },
+            ...mapState('BwadminMenu', {
+                selectedKeys: 'selectedKeys',
+                panes: 'panes',
+                openKeys: 'openKeys'
+            }),
+        },
+        watch: {
+            $route(to, from, next) {
+                this.onActiveKey(to.path)
+            }
+        },
+        data() {
+            const path = [
+                {
+                    title: '博客管理', icon: 'video-camera', key: 'sub1', children: [
+                        { title: '博客列表', content: '/bwadmin/bloglist', key: 'sub1-2' },
+                        { title: '创建博客', content: '/bwadmin/createblog', key: 'sub1-3' },
+                        { title: '博客分类', content: '/bwadmin/blogclassify', key: 'sub1-5' },
+                        { title: '评论管理', content: '/bwadmin/commentlist', key: 'sub1-4' },
+                        { title: '标签管理', content: '/bwadmin/blogtag', key: 'sub1-6' }
+                    ]
+                },
+                {
+                    title: '商品管理', icon: 'video-camera', key: 'sub2', children: [
+                        { title: '商品列表', content: '/bwadmin/productlist', key: 'sub2-7' },
+                        { title: '创建商品', content: '/bwadmin/createproduct', key: 'sub2-8' },
+                        { title: '商品分类', content: '/bwadmin/productclassify', key: 'sub2-9' },
+                    ]
+                },
+                { title: '页面管理', content: '/bwadmin/pagecms', icon: 'cloud-o', key: '12' },
+                { title: '图片管理', content: '/bwadmin/imagecms', icon: 'appstore-o', key: '13' },
+                { title: '询盘中心', content: '/bwadmin/inquirycms', icon: 'team', key: '14' },
+                { title: '语言设置', content: '/bwadmin/languagecms', icon: 'shop', key: '15' },
+                { title: '统计分析', content: '/bwadmin/statisticscms', icon: 'shop', key: '16' },
+                { title: '权限管理', content: '/bwadmin/jurisdictioncms', icon: 'shop', key: '17' },
+                { title: '相关链接', content: '/bwadmin/relatedcms', icon: 'shop', key: '18' }
+            ];
+            const rootSubmenuKeys = ['sub1', 'sub2', 'sub3'];
+            return {
+                activeKey: '1',
+                path,
+                rootSubmenuKeys,
+            }
+        },
+        created() {
+            this.resetPanes()
+            this.resetSelectedKeys()
+            this.resetPath()
+        },
+        mounted() {
+            window.addEventListener("beforeunload", this.beforeunloadFn);
+        },
+        destroyed() {
+            window.removeEventListener("beforeunload", this.beforeunloadFn);
+        },
         methods: {
+            ...mapActions('BwadminMenu', {
+                setSelectedKeys: 'setSelectedKeys',
+                setPanes: 'setPanes',
+                pushPanes: 'pushPanes',
+                setOpenKeys: 'setOpenKeys'
+            }),
+            /*********************************************************************** 页面刷新提示 ***********************************************************************/
+            beforeunloadFn(e) {
+                e = e || window.event;
+                if (e) {
+                    e.returnValue = "关闭提示";
+                }
+                return "关闭提示";
+            },
+            /*********************************************************************** 初始化 ***********************************************************************/
+            resetPanes() {
+                const panes = this.$store.state.BwadminMenu.panes
+                if (panes.length === 0) {
+                    this.$store.dispatch('BwadminMenu/resetPanes')
+                }
+            },
+            resetSelectedKeys() {
+                const selectedKeys = this.$store.state.BwadminMenu.selectedKeys
+                if (selectedKeys.length === 0) {
+                    this.$store.dispatch('BwadminMenu/resetSelectedKeys')
+                }
+            },
+            resetPath() {
+                let blo = false
+                const url = this.$route.path
+                const itemkey = this.menuPath.filter(item => item.content === url)[0]
+                const paneslist = this.panes
+                const parent = itemkey.key.split("-")
+                parent.length > 1 ? this.setOpenKeys([parent[0]]) : this.setOpenKeys([])
+                paneslist.forEach(item => {
+                    if (JSON.stringify(item) == JSON.stringify(itemkey)) {
+                        blo = true
+                    }
+                })
+                if (!blo) this.pushPanes(itemkey)
+                this.activeKey = itemkey.key
+                this.setSelectedKeys(itemkey.key)
+
+            },
             /*********************************************************************** 标签页 ***********************************************************************/
             callback(key) {
                 console.log(key);
             },
+            onActiveKey(val) {
+                const item = this.menuPath.filter(item => item.content === val)
+                if (item.length !== 0) {
+                    const key = item[0].key
+                    const keylist = key.split('-')
+                    const isPanes = this.panes.filter(item => item.key === key)[0]
+                    this.activeKey = key
+                    this.setSelectedKeys(key)
+                    keylist.length !== 0 ? this.setOpenKeys([keylist[0]]) : this.setOpenKeys([])
+                    if (!isPanes) this.pushPanes(item[0])
+                } else {
+                    this.activeKey = ''
+                    this.setSelectedKeys('')
+                    this.setOpenKeys([])
+                }
+            },
             onChange(activeKey) {
                 const path = this.panes.filter(pen => pen.key == activeKey)
-                this.selectedKeys[0] = activeKey + ''
+                const parent = activeKey.split('-')
+                if (parent.length > 1) {
+                    this.setOpenKeys([parent[0]])
+                } else {
+                    this.setOpenKeys([])
+                }
+                this.setSelectedKeys(activeKey)
                 this.$router.push(`${path[0].content}`)
             },
             onEdit(targetKey, action) {
@@ -106,29 +239,39 @@
                         activeContent = panes[0].content;
                     }
                 }
-                this.panes = panes;
-                this.activeKey = activeKey;
-                this.selectedKeys[0] = activeKey + ''
+                this.setPanes(panes)
+                this.setSelectedKeys(activeKey)
+                const parents = activeKey.split('-')
+                if (parents.length > 1) {
+                    this.setOpenKeys([parents[0]])
+                } else {
+                    this.setOpenKeys([])
+                }
                 if (activeContent) this.$router.push(`${activeContent}`)
             },
             /*********************************************************************** 导航菜单 ***********************************************************************/
-            onSelect({ item, key }) {
-                this.selectedKeys[0] = key + ''
+            onSelect({ key }) {
+                this.setSelectedKeys(key)
                 let blo = false
                 const paneslist = this.panes
-                const panesItem = new Object()
-                const newContent = this.path.filter(item => item.key == key)
-                panesItem.title = `${item.$el.innerText}`
-                panesItem.content = newContent[0].content
-                panesItem.key = key
+                const parent = key.split("-")
+                const itemkey = this.menuPath.filter(item => item.key === key)[0]
+                if (parent.length < 1) this.setOpenKeys([])
                 paneslist.forEach(item => {
-                    if (JSON.stringify(item) == JSON.stringify(panesItem)) {
+                    if (JSON.stringify(item) == JSON.stringify(itemkey)) {
                         blo = true
                     }
                 })
-                if (!blo) this.panes.push(panesItem)
-                this.activeKey = key + ''
-                this.$router.push(`${newContent[0].content}`)
+                if (!blo) this.pushPanes(itemkey)
+                this.$router.push(`${itemkey.content}`)
+            },
+            onOpenChange(openKeys) {
+                const latestOpenKey = openKeys.find(key => this.openKeys.indexOf(key) === -1);
+                if (this.rootSubmenuKeys.indexOf(latestOpenKey) === -1) {
+                    this.setOpenKeys(openKeys)
+                } else {
+                    latestOpenKey ? this.setOpenKeys([latestOpenKey]) : this.setOpenKeys([])
+                }
             },
             /*********************************************************************** 通用函数 ***********************************************************************/
         }
