@@ -40,13 +40,12 @@
                     <!---------------------------------------- 标签页 ---------------------------------------->
                     <a-tabs v-model="activeKey" hide-add type="editable-card" @edit="onEdit" @change="onChange"
                         style="margin-bottom: 0;">
-                        <a-tab-pane v-for="pane in panes" :key="pane.key" :tab="pane.title" :closable="pane.closable">
-                            <div
-                                :style="{ padding: '24px',height:'calc(100vh - 64px - 24px - 69px - 56px)','overflow': 'auto'}">
-                                <NuxtChild keep-alive ref="BW_Childmain" />
-                            </div>
-                        </a-tab-pane>
+                        <a-tab-pane v-for="pane in panes" :key="pane.key" :tab="pane.title" :closable="pane.closable"/>
                     </a-tabs>
+                    <div
+                        :style="{ padding: '0 24px',height:'calc(100vh - 64px - 24px - 69px - 56px)','overflow-x':'auto'}">
+                        <NuxtChild keep-alive/>
+                    </div>
                 </a-layout-content>
                 <a-layout-footer :style="{ textAlign: 'center' }">
                     BW CreatePages ©2021 Created by BlackZFQ
@@ -111,7 +110,6 @@
                 {
                     title: '商品管理', icon: 'video-camera', key: 'sub2', children: [
                         { title: '商品列表', content: '/bwadmin/productlist', key: 'sub2-7' },
-                        { title: '创建商品', content: '/bwadmin/createproduct', key: 'sub2-8' },
                         { title: '商品分类', content: '/bwadmin/productclassify', key: 'sub2-9' },
                     ]
                 },

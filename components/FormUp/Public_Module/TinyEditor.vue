@@ -4,8 +4,15 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
 -->
 
 <template>
-    <div class="TinyEditor">
+    <div class="TinyEditor" ref="TinyEditor">
         <Editor v-model="value" :init="init"></Editor>
+        <a-modal v-model="visible" width="1100px" :footer="null" :getContainer="()=>$refs.TinyEditor" :mask="false" :bodyStyle="{height:'600px',overflow:'auto'}" centered>
+            <span slot="title">
+                图片管理
+                <a-input-search placeholder="请输入图片的名称进行检索" style="width:300px;margin-left:24px;" v-model="search" @change="onSearch"/>
+            </span>
+            <ListImage scene  ref="listImage" @insertion="setImage"/>
+        </a-modal>
     </div>
 </template>
 <script>
@@ -49,7 +56,10 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
         data() {
 
             return {
+                visible:false,
+                search:'',
                 value: '',
+                editor: null,
                 init: {
                     language_url: '/tinymce/langs/zh_CN.js',// 语言包的路径
                     language: 'zh_CN',//语言
@@ -99,9 +109,10 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
                     table_default_styles: { 'border-color': '#000000', 'width': '100%' },
                     fontsize_formats: '11px 12px 14px 16px 18px 24px 36px 48px 50px 56px 60px 64px',
                     plugins: 'lists image media table wordcount link',
-                    toolbar: 'undo redo | fontsizeselect |  formatselect | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | lists CardBtn image media link',
+                    toolbar: 'undo redo | fontsizeselect |  formatselect | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | CardBtn image',
                     placeholder: '本网页无缓存功能，请不要再编辑时刷新，以免内容丢失。可插入图片或YouTube视频',
                     setup: (editor) => {
+                        const that=this
                         // 注册一个icon
                         editor.ui.registry.addIcon(
                             "shopping-cart",
@@ -110,18 +121,19 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
                         // 注册一个自定义的按钮
                         editor.ui.registry.addButton("CardBtn", {
                             icon: `shopping-cart`,
+                            title:`图片管理中心`,
                             //自定义按钮的方法
                             onAction: function (_) {
-                                editor.insertContent(
-                                    `<img class='goodsImg' src='https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3363295869,2467511306&fm=26&gp=0.jpg'/>`
-                                );
+                                that.editor=editor
+                                that.visible=true
                             }
                         });
                     }
                 }
             }
         },
-        mounted() {
+        created() {
+            const that=this
             // Initialize the app
             this.$nextTick(() => {
                 if (process.client) {
@@ -146,6 +158,18 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
                     console.log('上传失败了')
                     console.log(error)
                 }
+            },
+            //========================================================插入图片中心的图片===============================================
+            setImage(val){
+                this.editor.insertContent(
+                    `<img class='goodsImg' src='${val}'/>`
+                )
+                
+            },
+            //========================================================搜索图片中心的图片===============================================
+            onSearch(e) {
+                const params=this.search
+                this.$refs.listImage.onSearch(params)
             },
         }
     }

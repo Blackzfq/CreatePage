@@ -2,9 +2,10 @@
     <div class="bw-UserLogin">
         <LoginForm/>
         <div class="hint">
-            <h3>Warring!</h3>
-            <p>This system is still in the test stage, all accounts are invitation mechanism, not open to the public, all functions do not represent the final effect</p>
-            <!-- <p>本系统尚处于测试阶段,所有账号为邀请机制，暂未对外开放，所有功能并不代表最终效果</p> -->
+            <!-- <h3>Warring!</h3> -->
+            <h3>警告!</h3>
+            <!-- <p>This system is still in the test stage, all accounts are invitation mechanism, not open to the public, all functions do not represent the final effect</p> -->
+            <p>本系统尚处于测试阶段,所有账号为邀请机制，暂未对外开放，所有功能并不代表最终效果</p>
         </div>
     </div>
 </template>

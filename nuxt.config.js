@@ -18,6 +18,7 @@ export default {
 
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [
+    '@/assets/css/transition.css',
     'ant-design-vue/dist/antd.css',
     'normalize.css/normalize.css',
     'swiper/css/swiper.css',
@@ -27,6 +28,8 @@ export default {
   plugins: [
     '@/plugins/antd-ui',
     '@/plugins/swiper',
+    {src:'@/plugins/clipboard',ssr:false},
+    { src: '@/plugins/cropper', ssr: false },
     { src: '@/plugins/vcolorpicker.js', ssr: false }
   ],
 
