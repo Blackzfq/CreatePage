@@ -25,13 +25,11 @@ disabled：是否可选
             scene: {
                 type: String,
                 default: 'commodity'
-            },
+            }
         },
         data() {
             return {
                 defaultValue: [],//默认数组
-                selected: undefined,//默认值
-                defaultCopy: [],
                 options: [],
             }
         },
@@ -39,92 +37,69 @@ disabled：是否可选
             this.getSort()
         },
         methods: {
+            //初始化选择器
+            initialize() {
+                this.defaultValue = new Array()
+            },
             //获取分类汇总
-            async getSort() {
+            async getSort(key) {
                 const { data } = await getCommoditiesSort()
-                const newOption = this.processing(data.data)
+                const newOption = this.processing(data.data, false)
                 this.options = newOption
-                const id = this.$route.query.id
-                const commodity_type_id = this.$route.query.commodity_type_id
-                if (commodity_type_id) {
-                    this.selected = commodity_type_id
-                    this.redactPage()
-                } else if (id) {
-                    this.selected = id
-                    this.redactPage()
+                if (key && this.scene === 'classify') {
+                    this.defaultValue=this.findParent(newOption,key)
+                    this.defaultValue.pop()
+                } else if (key) {
+                    this.defaultValue=this.findParent(newOption,key)
                 }
             },
-            //数据处理
-            processing(arr) {
-                const newArray = new Array()
-                const that = this
-                arr.forEach(function (value, index) {
-                    const newObj_A = new Object()
-                    newObj_A.value = value.id
-                    newObj_A.label = value.name
-                    if (value.twoLevelCommodityTypes) {
-                        const children = this.processing(value.twoLevelCommodityTypes)
-                        if (children.length !== 0) newObj_A.children = children
-                    } else if (value.threeLevelCommodityTypes) {
-                        const children = this.processing(value.threeLevelCommodityTypes)
-                        if (children.length !== 0) {
-                            children.forEach(function (value, index) {
-                                this.scene === "classify" ? value.disabled = true : value.disabled = false
-                            }, this)
-                            newObj_A.children = children
+            //数据处理 2021/3/15 改
+            processing(arr, isDisabled) {
+                const newOption = arr.map(item => {
+                    const newItem = {
+                        value: item.id,
+                        label: item.name,
+                        disabled: isDisabled
+                    }
+                    if (item.twoLevelCommodityTypes) {
+                        const params = item.twoLevelCommodityTypes
+                        if (params.length !== 0) {
+                            newItem.children = this.processing(params, false)
+                        }
+                    } else if (item.threeLevelCommodityTypes) {
+                        const params = item.threeLevelCommodityTypes
+                        if (params.length !== 0) {
+                            newItem.children = this.processing(params, true)
                         }
                     }
-                    newArray[index] = newObj_A
-                }, this)
-                return newArray
+                    return Object.assign({}, newItem)
+                })
+                return newOption
+            },
+            //过滤树节点返回结果  2021/3/15 改
+            findParent(tree, key) {
+                let stack = new Array()
+                let going = true
+                let walker = (tree, key) => {
+                    tree.forEach(item => {
+                        if (!going) return
+                        stack.push(item.value)
+                        if (item.value === key) {
+                            going = false
+                        } else if (item.children) {
+                            walker(item.children, key)
+                        } else {
+                            stack.pop()
+                        }
+                    })
+                    if (going) stack.pop()
+                }
+                walker(tree, key)
+                return stack
             },
             //过滤搜索结果
             filter(inputValue, path) {
                 return path.some(option => option.label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1);
-            },
-            //获取关联父级
-            processClassIfyOne() {
-                const arr = this.options
-                for (let i = 0; i < arr.length; i++) {
-                    if (arr[i].value == this.selected) {
-                        this.defaultCopy[0] = arr[i].value
-                        break;
-                    } else if (arr[i].children) {
-                        const isFind = this.processClassIfytow(arr[i].value, arr[i].children)
-                        if (isFind) break;
-                    }
-                }
-            },
-            processClassIfytow(key, arr) {
-                let isFind = false
-                for (let i = 0; i < arr.length; i++) {
-                    if (arr[i].value == this.selected) {
-                        this.defaultCopy[0] = key
-                        this.defaultCopy[1] = arr[i].value
-                        isFind = true
-                        break
-                    } else if (arr[i].children) {
-                        const ischildFind = this.processClassIfytree(key, arr[i].value, arr[i].children)
-                        if (ischildFind) {
-                            isFind = true
-                            break;
-                        }
-                    }
-                }
-                return isFind
-            },
-            processClassIfytree(key1, key2, arr) {
-                let isFind = false
-                for (let i = 0; i < arr.length; i++) {
-                    if (arr[i].value == this.selected) {
-                        this.defaultCopy[0] = key1
-                        this.defaultCopy[1] = key2
-                        this.defaultCopy[2] = arr[i].value
-                        isFind = true
-                        break
-                    }
-                }
-                return isFind
             },
             //数据操作
             onChange(value) {
@@ -134,16 +109,6 @@ disabled：是否可选
             clearSelect() {
                 const newSelect = new Array()
                 this.defaultValue = newSelect
-            },
-            //编辑
-            redactPage() {
-                this.processClassIfyOne()
-                const newArr = this.defaultCopy
-                if (this.scene === "classify") {
-                    newArr.pop()
-                }
-                this.defaultValue = newArr
-
             }
         }
     }

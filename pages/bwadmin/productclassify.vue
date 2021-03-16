@@ -8,26 +8,32 @@
             <a-col :span="12" style="text-align: end;">
                 <span class="myTextButton">导入</span>
                 <span class="myTextButton">导出</span>
-                <a-button type="primary" @click="()=>{visible=true;modalTitle='新建分类'}">
+                <a-button type="primary" @click="()=>{redactKey='';visible=true;modalTitle='新建分类';}">
                     添加分类
                 </a-button>
             </a-col>
         </a-row>
         <a-divider />
-        <ListTable :columns="columns" :data="data" @eitor="onEitor" />
+        <ListTable ref="listTable" :columns="columns" :data="data" @eitor="onEitor" />
         <!-- 弹窗 -->
-        <a-modal v-model="visible" :footer="null" :getContainer="()=>$refs.ProductClassify" width="1200px" :bodyStyle="{height:'700px',overflow:'auto'}" centered>
+        <a-modal v-model="visible" :footer="null" :getContainer="()=>$refs.ProductClassify" width="1200px"
+            :bodyStyle="{height:'700px',overflow:'auto'}" centered destroyOnClose>
             <span slot="title">
                 {{modalTitle}}
                 <a-tag color="#2db7f5">
                     {{modalTitle|tagTipTitle}}
                 </a-tag>
+                <a-progress :percent="percent" size="small" status="active" style="margin-top:15px;" v-if="upLoading" />
             </span>
-            <SortForm />
+            <a-spin wrapperClassName="mywrapperClassName" :spinning="upLoading">
+                <a-icon slot="indicator" type="loading" style="font-size: 24px" spin />
+                <SortForm :redactKey="redactKey" @onpercent="(val)=>{percent=val}" @changeLoading="(val)=>{upLoading=val}" />
+            </a-spin>
         </a-modal>
     </div>
 </template>
 <script>
+    import { getCommoditiesSort } from '@/assets/api'
     const columns = [
         {
             title: '名称',
@@ -58,47 +64,7 @@
             scopedSlots: { customRender: 'action' },
         },
     ];
-    const data = [
-        {
-            key: '1',
-            url: 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1091405991,859863778&fm=26&gp=0.jpg',
-            title: 'John Brown',
-            date: '2021-3-5',
-            stick: '0',
-            children: [
-                {
-                    key: '1-1',
-                    url: 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1091405991,859863778&fm=26&gp=0.jpg',
-                    title: 'John Brown',
-                    date: '2021-3-5',
-                    stick: '1',
-                },
-                {
-                    key: '1-2',
-                    url: 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1091405991,859863778&fm=26&gp=0.jpg',
-                    title: 'John Brown',
-                    date: '2021-3-5',
-                    stick: '0',
-                    children: [
-                        {
-                            key: '1-1-1',
-                            url: 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1091405991,859863778&fm=26&gp=0.jpg',
-                            title: 'John Brown',
-                            date: '2021-3-5',
-                            stick: '1',
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            key: '2',
-            url: 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1625564583,4245123740&fm=26&gp=0.jpg',
-            title: 'Jim Green',
-            date: '2021-3-5',
-            stick: '1'
-        }
-    ];
+    const data = [];
     export default {
         name: 'ProductClassify',
         data() {
@@ -106,8 +72,11 @@
                 columns,
                 data,
                 loading: false,
+                upLoading: false,
                 visible: false,
                 modalTitle: '',
+                percent: 0,
+                redactKey:''
             }
         },
         filters: {
@@ -123,16 +92,63 @@
                 return title
             }
         },
+        mounted(){
+            this.getSortData()
+        },
         methods: {
+            //刷新当前列表内容
             refreshData() {
                 this.loading = true
-                setTimeout(() => {
-                    this.loading = false
-                }, 1000)
+                this.getSortData()
             },
+            //进入编辑
             onEitor(params) {
-                this.visible = true
+                this.redactKey=params.key
                 this.modalTitle = params.title
+                this.visible = true
+            },
+            //获取分类数据
+            getSortData() {
+                this.$refs.listTable.changeLoading(true)
+                getCommoditiesSort()
+                    .then(({data:{data:sortData}})=>{
+                        const gData=this.formattingData(sortData)
+                        this.data=gData
+                    })
+                    .catch(() => {
+                        this.$notification.open({
+                            message: `失败通知`,
+                            description:
+                                `分类获取失败，正在为您尝试重新连接获取`,
+                            placement: 'bottomRight',
+                        });
+                    })
+                    .finally(
+                        () => {
+                            this.loading = false
+                            this.$refs.listTable.changeLoading(false)
+                        }
+                    )
+            },
+            //处理分类数据
+            formattingData(arr){
+                const newArr=arr.map(item=>{
+                    const sourceItem={
+                        key:item.id,
+                        url:item.main_img_url,
+                        title:item.name,
+                        date:item.created_at,
+                        stick:item.attrSort?'1':'0'
+                    }
+                    if(item.twoLevelCommodityTypes||item.threeLevelCommodityTypes){
+                        const params=item.twoLevelCommodityTypes||item.threeLevelCommodityTypes
+                        if(params.length!==0){
+                            sourceItem.children=this.formattingData(params)
+                        }
+                    }
+                    return Object.assign({},sourceItem)
+                })
+                return newArr
             }
         }
     }
@@ -164,6 +180,15 @@
                 .right_form_content {
                     position: sticky;
                     top: 0;
+                }
+            }
+        }
+
+        /* loding的样式改写 */
+        .mywrapperClassName {
+            &::v-deep div {
+                .ant-spin {
+                    max-height: 100%;
                 }
             }
         }

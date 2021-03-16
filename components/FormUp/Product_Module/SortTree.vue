@@ -1,13 +1,9 @@
-
-
-
-
 <template>
   <div class="SortTree">
     <a-input style="margin-bottom: 8px" placeholder="Search" @change="onChange">
       <a-tooltip slot="suffix" title="刷新当前分类列表" placement="right">
-        <a-icon type="reload" style="cursor: pointer;" :spin="spin" @click="getSortList"/>
-    </a-tooltip>
+        <a-icon type="reload" style="cursor: pointer;" :spin="spin" @click="getSortList" />
+      </a-tooltip>
     </a-input>
     <a-tree checkable :expanded-keys="expandedKeys" :auto-expand-parent="autoExpandParent" :tree-data="gData"
       v-model="checkedKeys" @expand="onExpand">
@@ -29,7 +25,7 @@
     name: 'SortTree',
     data() {
       return {
-        spin:false,
+        spin: false,
         expandedKeys: [],
         checkedKeys: [],
         searchValue: '',
@@ -95,31 +91,37 @@
       },
       //获取分类树
       getSortList() {
-        this.spin=true
+        this.spin = true
         getCommoditiesSort()
           .then(({ data: { data: ListData } }) => {
-            this.gData = ListData
-            this.restFormat(ListData)
+            this.gData = this.restFormat(ListData)
+            console.log(this.gData)
             this.generateList(this.gData)
-            setTimeout(()=>{
-              this.spin=false
-            },1000)
+            setTimeout(() => {
+              this.spin = false
+            }, 1000)
           })
           .catch(err => {
             this.$message.error('分类获取失败')
           })
           .finally()
       },
-      //配置分类树格式
+      //配置分类树格式 2021/3/15 改
       restFormat(arr) {
-        arr.forEach(item => {
-          if (item.twoLevelCommodityTypes || item.threeLevelCommodityTypes) {
-            item.key = item.id
-            item.title = item.name
-            item.children = item.twoLevelCommodityTypes || item.threeLevelCommodityTypes
-            this.restFormat(item.children)
+        const format = arr.map(item => {
+          const newItem = {
+            key: item.id,
+            title: item.name,
           }
+          if (item.twoLevelCommodityTypes || item.threeLevelCommodityTypes) {
+            const params = item.twoLevelCommodityTypes || item.threeLevelCommodityTypes
+            if (params.length !== 0) {
+              newItem.children = this.restFormat(params)
+            }
+          }
+          return Object.assign({}, newItem)
         })
+        return format
       }
     },
   };

@@ -14,10 +14,10 @@
             </a-col>
         </a-row>
         <a-divider />
-        <ListTable :columns="columns" :data="data" @eitor="onEitor" />
+        <ListTable ref="listTable" :columns="columns" :data="data" @eitor="onEitor" />
         <!-- 弹窗 -->
-        <a-modal v-model="visible" :footer="null" :getContainer="()=>$refs.ProductList"
-            width="1200px" :bodyStyle="{height:'700px',overflow:'auto'}" centered>
+        <a-modal v-model="visible" :footer="null" :getContainer="()=>$refs.ProductList" width="1200px"
+            :bodyStyle="{height:'700px',overflow:'auto'}" centered>
             <span slot="title">
                 {{modalTitle}}
                 <a-tag :color="tagTip|tagTipColor">
@@ -29,6 +29,7 @@
     </div>
 </template>
 <script>
+    import { getCommodity } from '@/assets/api'
     const columns = [
         {
             title: '名称',
@@ -44,6 +45,7 @@
             title: '分类',
             dataIndex: 'classfly',
             scopedSlots: {
+                customRender: 'classfly',
                 filterDropdown: 'filterSortDropdown',
                 filterIcon: 'searchIcon',
             }
@@ -76,44 +78,7 @@
             scopedSlots: { customRender: 'action' },
         },
     ];
-    const data = [
-        {
-            key: '1',
-            url:'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1091405991,859863778&fm=26&gp=0.jpg',
-            title: 'John Brown',
-            classfly: 'A',
-            date: '2021-3-5',
-            state: '0',
-            stick: '0'
-        },
-        {
-            key: '2',
-            url:'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1625564583,4245123740&fm=26&gp=0.jpg',
-            title: 'Joe Black',
-            classfly: 'B',
-            date: '2021-3-5',
-            state: '1',
-            stick: '0'
-        },
-        {
-            key: '3',
-            url:'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1091405991,859863778&fm=26&gp=0.jpg',
-            title: 'Jim Green',
-            classfly: 'A',
-            date: '2021-3-5',
-            state: '1',
-            stick: '1'
-        },
-        {
-            key: '4',
-            url:'https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1601825257,855529558&fm=11&gp=0.jpg',
-            title: 'Jim Red',
-            classfly: 'C',
-            date: '2021-3-5',
-            state: '0',
-            stick: '1'
-        },
-    ];
+    const data = [];
     export default {
         name: 'ProductList',
         data() {
@@ -122,51 +87,98 @@
                 data,
                 loading: false,
                 visible: false,
-                modalTitle:'',
-                tagTip:'',
+                modalTitle: '',
+                tagTip: '',
             }
         },
         filters: {
-            tagTipColor:function(val){
+            tagTipColor: function (val) {
                 let color
-                switch(val){
+                switch (val) {
                     case '0':
-                    color="#f50"
-                    break;
+                        color = "#f50"
+                        break;
                     case '1':
-                    color="#2db7f5"
-                    break;
+                        color = "#2db7f5"
+                        break;
                     default:
-                    color="#87d068"
+                        color = "#87d068"
                 }
                 return color
             },
-            tagTipTitle:function(val){
+            tagTipTitle: function (val) {
                 let title
-                switch(val){
+                switch (val) {
                     case '0':
-                    title="仓库内"
-                    break;
+                        title = "仓库内"
+                        break;
                     case '1':
-                    title="橱窗中"
-                    break;
+                        title = "橱窗中"
+                        break;
                     default:
-                    title="正在创建"
+                        title = "正在创建"
                 }
                 return title
             }
         },
+        mounted(){
+            this.getGoods()
+        },
         methods: {
+            //重置当前列表
             refreshData() {
                 this.loading = true
-                setTimeout(() => {
-                    this.loading = false
-                }, 1000)
+                this.getGoods()
             },
+            //进入编辑
             onEitor(params) {
                 this.visible = true
-                this.modalTitle=params.title
-                this.tagTip=params.state
+                this.modalTitle = params.title
+                this.tagTip = params.state
+            },
+            //拉取列表数据
+            getGoods() {
+                this.$refs.listTable.changeLoading(true)
+                getCommodity()
+                    .then(({ data: { data: goodsData } }) => {
+                        this.data = this.formattingData(goodsData)
+                    })
+                    .catch(() => {
+                        this.$notification.open({
+                            message: `失败通知`,
+                            description:
+                                `商品列表信息获取失败，正在为您尝试重新连接获取`,
+                            placement: 'bottomRight',
+                        });
+                    })
+                    .finally(
+                        () => {
+                            this.loading = false
+                            this.$refs.listTable.changeLoading(false)
+                        }
+                    )
+            },
+            //处理分类数据
+            formattingData(arr) {
+                const newArr = arr.map(item => {
+                    const sourceItem = {
+                        key: item.id,
+                        url: item.main_img_url,
+                        title: item.name,
+                        classfly:item.commodity_types.map(type=>{
+                            const commodityType={
+                                key:type.id,
+                                title:type.name
+                            } 
+                            return Object.assign({}, commodityType)
+                        }),
+                        date: item.created_at,
+                        stick: item.attrSort ? '1' : '0',
+                        state: item.isShow ? '1' : '0'
+                    }
+                    return Object.assign({}, sourceItem)
+                })
+                return newArr
             }
         }
     }

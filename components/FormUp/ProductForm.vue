@@ -59,7 +59,7 @@
                             </a-dropdown>
                         </a-col>
                     </a-row>
-                    <MideoEditor />
+                    <CommodityImageAndMove/>
                 </a-form-model-item>
                 <a-form-model-item>
                     <span slot="label">

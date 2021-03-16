@@ -1,7 +1,13 @@
 <template>
     <div class="ListImage" @scroll="onScroll">
         <div class="ImageList">
-            <a-card hoverable style="width: 100%" v-for="(imageData,imageIndex) in data" :key="imageData.id">
+            <a-card hoverable style="width: 100%" v-for="(imageData,imageIndex) in data" :key="imageData.id"
+                @click="setSelect(imageData.id)">
+                <div slot="title" class="titleConent">
+                    <a-icon type="check-circle" v-if="selectAll(imageData.id)"
+                        style="font-size: 28px;color: rgb(82,196,26)" />
+                    <div class="circle" v-else> </div>
+                </div>
                 <img slot="cover" alt="example" :src="imageData.url" width="100%" height="166px" />
                 <template slot="actions" class="ant-card-actions">
                     <a-tooltip placement="top" v-if="!scene">
@@ -38,12 +44,13 @@
                 <a-icon slot="indicator" type="loading" style="font-size: 24px;margin-top: 24px;" spin />
             </a-spin>
         </div>
-        <a-empty :description="false" v-if="data.length==0 && !loading"/>
+        <a-empty :description="false" v-if="data.length==0 && !loading" />
     </div>
 </template>
 <script>
     import { getMedioList } from '@/assets/api'
     const data = []
+    const selection = []
     export default {
         name: 'ListImage',
         props: {
@@ -51,13 +58,17 @@
                 type: Boolean,
                 default: false
             },
-            updeData:{
-                type:Object,
-                default:null
+            updeData: {
+                type: Object,
+                default: null
+            },
+            multiple: {
+                type: Boolean,
+                default: false
             }
         },
-        watch:{
-            updeData:function(newVal){
+        watch: {
+            updeData: function (newVal) {
                 this.data.unshift(newVal)
             },
             deep: true
@@ -66,10 +77,18 @@
 
             return {
                 data,
+                selection,
                 loading: true,
                 isScroll: true,
                 keyword: '',
                 pagination: {}
+            }
+        },
+        computed: {
+            selectAll() {
+                return function (key) {
+                    return this.selection.some(item => item === key)
+                }
             }
         },
         created() {
@@ -79,13 +98,13 @@
             // 拉取图片数据
             async resetImageList(params = {}) {
 
-                this.data=new Array()
-                this.pagination=new Object()
+                this.data = new Array()
+                this.pagination = new Object()
                 this.loading = true
-                this.isScroll= true
+                this.isScroll = true
 
                 params.page = 1
-                params.keyword=this.keyword
+                params.keyword = this.keyword
                 getMedioList(params)
                     .then(({ data: { data: listData, meta: { pagination } } }) => {
                         this.data = listData
@@ -100,8 +119,8 @@
                     })
             },
             // 图片搜索
-            onSearch(val){
-                this.keyword=val
+            onSearch(val) {
+                this.keyword = val
                 this.resetImageList()
             },
             // 翻页拉取图片数据
@@ -115,7 +134,7 @@
                 } else {
                     this.loading = true
                     params.page = current_page + 1
-                    params.keyword=this.keyword
+                    params.keyword = this.keyword
                     getMedioList(params)
                         .then(({ data: { data: listData, meta: { pagination } } }) => {
                             this.data = [...this.data, ...listData]
@@ -127,6 +146,18 @@
                         .finally(() => {
                             this.loading = false
                         })
+                }
+            },
+            //选择图片
+            setSelect(key) {
+                const selectList = this.selection
+                if (selectList.some(item => item === key)) {
+                    this.selection = selectList.filter(selectitem => selectitem !== key)
+                } else if (selectList.length < 6) {
+                    this.selection.push(key)
+                } else {
+                    this.$message.error('最多选择6项')
+                    return
                 }
             },
             // 复制成功时的回调函数
@@ -147,7 +178,7 @@
                 if (ele.scrollTop + ele.offsetHeight === ele.scrollHeight) { //监听滚动到div底部
                     if (this.isScroll) {
                         this.getImageList()
-                    } 
+                    }
                 }
             }
         }
@@ -164,5 +195,19 @@
         grid-template-columns: repeat(5, 18.4%);
         grid-column-gap: 2%;
         grid-row-gap: 15px;
+    }
+
+    .titleConent {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .circle {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid #666666;
+        text-align: center;
+        vertical-align: middle;
     }
 </style>

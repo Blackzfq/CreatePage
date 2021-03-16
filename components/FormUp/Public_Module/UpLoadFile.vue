@@ -121,6 +121,10 @@ customRequest                                  通过覆盖默认的上传行为
             };
         },
         methods: {
+            // 初始化文件上传
+            initialize(files){
+                this.fileList=files?files:new Array()
+            },
             // 预览文件Modal对话框 点击遮罩层或右上角叉或取消按钮的回调
             handleCancelpreview() {
                 this.previewVisible = false

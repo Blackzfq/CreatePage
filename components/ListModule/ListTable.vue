@@ -109,6 +109,12 @@
                     {{text}}
                   </a-tooltip>
             </span>
+            <!-- 分类列 -->
+            <span slot="classfly" slot-scope="text">
+                <a-tag color="blue" v-for="item in text" :key="item.key">
+                    {{item.title}}
+                </a-tag>
+            </span>
             <!-- 状态列 -->
             <span slot="state" slot-scope="text">
                 <a-badge :status="text|badgeColor" :text="text|badgeText" />
@@ -197,8 +203,8 @@
             },
         },
         mounted() {
-            this.fetch();
-            this.resetGoodsQuery()
+            // this.fetch();
+            // this.resetGoodsQuery()
         },
         methods: {
             /*初始化*/
@@ -211,8 +217,13 @@
                 }
                 this.goodsQuery = Object.assign({}, data)
             },
+            // 关闭tag标签
             log(e) {
                 console.log(e);
+            },
+            // 切换loading状态
+            changeLoading(val){
+                this.loading=val
             },
             handleTableChange(pagination, filters, sorter) {
                 console.log(pagination);

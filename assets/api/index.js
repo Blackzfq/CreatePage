@@ -2,7 +2,7 @@ import { Axios, Https } from "~/assets/axios/index.js";
 
 //    ================测试专用================
 export function user_GetList(params) {
-    return Https.get(`https://randomuser.me/api`,{params})
+    return Https.get(`https://randomuser.me/api`, { params })
 }
 
 // // ================用户管理================
@@ -65,21 +65,21 @@ export function login(data) {
 
 // // ================商品分类================
 
-export function addNewCommoditiesSort(data) {
-    return Axios.post(`api/ad/commodity/types`, data)
+export function addNewCommoditiesSort(data, config) {
+    return Axios.post(`api/ad/commodity/types`, data, config)
 }
 
 export function getCommoditiesSort() {
     return Axios.get(`api/commodity/types`)
 }
 
-// export function getCommoditiesSortDetails(data) {
-//     return Axios.get(`api/commodity/types/${data}`)
-// }
+export function getCommoditiesSortDetails(data, config) {
+    return Axios.get(`api/commodity/types/${data}`, { params: {} }, config)
+}
 
-// export function upDataCommoditiesSort(id, data) {
-//     return Axios.post(`api/ad/commodity/types/${id}/_update`, data)
-// }
+export function upDataCommoditiesSort(id, data, config) {
+    return Axios.post(`api/ad/commodity/types/${id}/_update`, data, config)
+}
 
 // export function deleteCommoditiesSort(data) {
 //     return Axios.delete(`api/ad/commodity/types/${data}`)
@@ -99,9 +99,9 @@ export function getCommoditiesSort() {
 //     return Axios.post(`api/ad/commodities`, data)
 // }
 
-// export function getCommodity(params) {
-//     return Axios.get(`api/ad/commodities`, { params })
-// }
+export function getCommodity(params) {
+    return Axios.get(`api/ad/commodities`, { params })
+}
 
 // export function upDataCommodity(id, data) {
 //     return Axios.post(`api/ad/commodities/${id}/_update`, data)
@@ -243,12 +243,12 @@ export function getCommoditiesSort() {
 
 // // ================媒体库管理================
 
-export function getMedioList(params){
-    return Axios.get('api/ad/files',{params})
+export function getMedioList(params) {
+    return Axios.get('api/ad/files', { params })
 }
 
-export function upMedioFiles(data,config){
-    return Axios.post('api/ad/files',data,config)
+export function upMedioFiles(data, config) {
+    return Axios.post('api/ad/files', data, config)
 }
 
 // // ================公共方法================

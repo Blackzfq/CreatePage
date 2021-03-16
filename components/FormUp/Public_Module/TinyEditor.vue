@@ -6,12 +6,14 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
 <template>
     <div class="TinyEditor" ref="TinyEditor">
         <Editor v-model="value" :init="init"></Editor>
-        <a-modal v-model="visible" width="1100px" :footer="null" :getContainer="()=>$refs.TinyEditor" :mask="false" :bodyStyle="{height:'600px',overflow:'auto'}" centered>
+        <a-modal v-model="visible" width="1100px" :footer="null" :getContainer="()=>$refs.TinyEditor" :mask="false"
+            :bodyStyle="{height:'600px',overflow:'auto'}" centered>
             <span slot="title">
                 图片管理
-                <a-input-search placeholder="请输入图片的名称进行检索" style="width:300px;margin-left:24px;" v-model="search" @change="onSearch"/>
+                <a-input-search placeholder="请输入图片的名称进行检索" style="width:300px;margin-left:24px;" v-model="search"
+                    @change="onSearch" />
             </span>
-            <ListImage scene  ref="listImage" @insertion="setImage"/>
+            <ListImage scene ref="listImage" @insertion="setImage" />
         </a-modal>
     </div>
 </template>
@@ -56,8 +58,8 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
         data() {
 
             return {
-                visible:false,
-                search:'',
+                visible: false,
+                search: '',
                 value: '',
                 editor: null,
                 init: {
@@ -112,7 +114,7 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
                     toolbar: 'undo redo | fontsizeselect |  formatselect | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | CardBtn image',
                     placeholder: '本网页无缓存功能，请不要再编辑时刷新，以免内容丢失。可插入图片或YouTube视频',
                     setup: (editor) => {
-                        const that=this
+                        const that = this
                         // 注册一个icon
                         editor.ui.registry.addIcon(
                             "shopping-cart",
@@ -121,11 +123,11 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
                         // 注册一个自定义的按钮
                         editor.ui.registry.addButton("CardBtn", {
                             icon: `shopping-cart`,
-                            title:`图片管理中心`,
+                            title: `图片管理中心`,
                             //自定义按钮的方法
                             onAction: function (_) {
-                                that.editor=editor
-                                that.visible=true
+                                that.editor = editor
+                                that.visible = true
                             }
                         });
                     }
@@ -133,7 +135,7 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
             }
         },
         created() {
-            const that=this
+            const that = this
             // Initialize the app
             this.$nextTick(() => {
                 if (process.client) {
@@ -143,7 +145,7 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
         },
         methods: {
             initialize(val) {
-                val ? this.value = val : this.value = ''
+                this.value = val ? val : ''
             },
             propsParent(val) {
                 this.$emit('getTinyValue', val)
@@ -160,15 +162,15 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
                 }
             },
             //========================================================插入图片中心的图片===============================================
-            setImage(val){
+            setImage(val) {
                 this.editor.insertContent(
                     `<img class='goodsImg' src='${val}'/>`
                 )
-                
+
             },
             //========================================================搜索图片中心的图片===============================================
             onSearch(e) {
-                const params=this.search
+                const params = this.search
                 this.$refs.listImage.onSearch(params)
             },
         }
