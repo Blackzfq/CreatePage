@@ -3,13 +3,13 @@
         <div class="tootl" style="position: sticky;top: 0;background-color: #FFF;z-index: 5">
             <a-row type="flex" justify="space-between">
                 <a-col :span="12">
-                    <span style="font-size: 16px;">图片文件管理</span>
+                    <span style="font-size: 16px;">文件管理</span>
                     <a-icon type="reload" :spin="loading" style="margin-left: 15px;" @click="refreshData" />
                 </a-col>
                 <a-col :span="12" style="text-align: end;">
-                    <a-input-search placeholder="请输入图片的名称" style="width: 200px;text-align: start" v-model="search" @change="onSearch" />
+                    <a-input-search placeholder="请输入文件的名称" style="width: 200px;text-align: start" v-model="search" @change="onSearch" />
                     <a-button type="primary" @click="()=>{visible=true}">
-                        添加图片
+                        添加文件
                     </a-button>
                 </a-col>
             </a-row>

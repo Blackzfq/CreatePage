@@ -22,7 +22,8 @@
     "vcolorpicker": "^1.1.0",
     "vue-awesome-swiper": "^4.1.0",
     "vue-clipboard2": "^0.3.1",
-    "vue-cropper": "^0.5.5"
+    "vue-cropper": "^0.5.5",
+    "vuedraggable": "^2.24.3"
   },
   "devDependencies": {
     "node-sass": "^4.14.1",

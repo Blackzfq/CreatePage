@@ -30,7 +30,7 @@ export default {
     '@/plugins/swiper',
     {src:'@/plugins/clipboard',ssr:false},
     { src: '@/plugins/cropper', ssr: false },
-    { src: '@/plugins/vcolorpicker.js', ssr: false }
+    { src: '@/plugins/vcolorpicker.js', ssr: false },
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components

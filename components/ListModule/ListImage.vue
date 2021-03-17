@@ -1,14 +1,24 @@
+<!-- API
+     事件
+     change      选择状态改变的回调            function(fileList)
+     insertion   获取图片的url地址             function(url)
+     removeFile  移除某项图片                  function(file) 
+-->
 <template>
     <div class="ListImage" @scroll="onScroll">
         <div class="ImageList">
             <a-card hoverable style="width: 100%" v-for="(imageData,imageIndex) in data" :key="imageData.id"
-                @click="setSelect(imageData.id)">
-                <div slot="title" class="titleConent">
-                    <a-icon type="check-circle" v-if="selectAll(imageData.id)"
-                        style="font-size: 28px;color: rgb(82,196,26)" />
-                    <div class="circle" v-else> </div>
-                </div>
-                <img slot="cover" alt="example" :src="imageData.url" width="100%" height="166px" />
+                @click="setSelect(imageData)">
+                <template slot="cover">
+                    <div class="coverimage">
+                        <img alt="example" :src="screenshot(imageData)" width="100%" height="166px" />
+                        <div class="circlebox" v-if="multiple">
+                            <a-icon type="check-circle" v-if="selectAll(imageData.id)"
+                                style="font-size: 20px;color: rgb(82,196,26)" />
+                            <div class="circle" v-else> </div>
+                        </div>
+                    </div>
+                </template>
                 <template slot="actions" class="ant-card-actions">
                     <a-tooltip placement="top" v-if="!scene">
                         <template slot="title">
@@ -65,7 +75,7 @@
             multiple: {
                 type: Boolean,
                 default: false
-            }
+            },
         },
         watch: {
             updeData: function (newVal) {
@@ -87,7 +97,18 @@
         computed: {
             selectAll() {
                 return function (key) {
-                    return this.selection.some(item => item === key)
+                    return this.selection.some(item => item.id === key)
+                }
+            },
+            screenshot() {
+                return function (option) {
+                    let url
+                    if (option.type === 'image') {
+                        url = option.url
+                    } else {
+                        url = option.url + `?x-oss-process=video/snapshot,t_7000,f_jpg,w_120,h_120,m_fast`
+                    }
+                    return url
                 }
             }
         },
@@ -125,10 +146,10 @@
             },
             // 翻页拉取图片数据
             getImageList(params = {}) {
+                this.isScroll = false
                 const total_pages = this.pagination.total_pages
                 const current_page = this.pagination.current_page
                 if (total_pages === current_page) {
-                    this.isScroll = false
                     this.$message.success('已经全部加载完毕了')
                     return
                 } else {
@@ -145,20 +166,29 @@
                         })
                         .finally(() => {
                             this.loading = false
+                            this.isScroll = true
                         })
                 }
             },
             //选择图片
-            setSelect(key) {
+            setSelect(option) {
+                const key = option.id
+                if (!this.multiple) return
                 const selectList = this.selection
-                if (selectList.some(item => item === key)) {
-                    this.selection = selectList.filter(selectitem => selectitem !== key)
+                if (selectList.some(item => item.id === key)) {
+                    this.selection = selectList.filter(selectitem => selectitem.id !== key)
                 } else if (selectList.length < 6) {
-                    this.selection.push(key)
+                    this.selection.push(option)
                 } else {
                     this.$message.error('最多选择6项')
                     return
                 }
+                this.$emit('change', this.selection)
+            },
+            // 移除选择的图片
+            deleteFile(key) {
+                this.selection = this.selection.filter(item => item.id !== key)
+                // console.log(this.selection)
             },
             // 复制成功时的回调函数
             onCopy(e) {
@@ -197,16 +227,21 @@
         grid-row-gap: 15px;
     }
 
-    .titleConent {
-        display: flex;
-        justify-content: flex-end;
+    .coverimage {
+        position: relative;
+
+        .circlebox {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+        }
     }
 
     .circle {
-        width: 28px;
-        height: 28px;
+        width: 20px;
+        height: 20px;
         border-radius: 50%;
-        border: 2px solid #666666;
+        background-color: rgba(255, 255, 255, .5);
         text-align: center;
         vertical-align: middle;
     }
