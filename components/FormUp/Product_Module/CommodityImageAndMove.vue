@@ -70,7 +70,7 @@
                     if (option.type === 'image') {
                         url = option.url
                     } else {
-                        url = option.url + `?x-oss-process=video/snapshot,t_7000,f_jpg,w_120,h_120,m_fast`
+                        url = option.url + `?x-oss-process=video/snapshot,t_7000,f_jpg,w_120,h_120,m_fast` 
                     }
                     return url
                 }
