@@ -251,6 +251,12 @@ export function upMedioFiles(data, config) {
     return Axios.post('api/ad/files', data, config)
 }
 
+// // ================标签库管理================
+
+export function getLabelList(params){
+    return Axios.get('api/ad/tags', { params })
+}
+
 // // ================公共方法================
 // export function getOssSignatures(params) {
 //     return Axios.get(`api/ad/aliOss/signatures`, { params })

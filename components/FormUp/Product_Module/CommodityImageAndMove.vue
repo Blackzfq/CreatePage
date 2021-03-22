@@ -11,21 +11,25 @@
         </a-empty>
         <!-- 自定义已存在内容 -->
         <div class="bw-upload" v-else>
-            <draggable v-model="fileList">
+            <draggable v-model="fileList" filter=".forbid" :move="onMove">
+                <!-- 主图 -->
                 <div class="upContent updone" v-for="item in fileList" :key="item.key">
-                    <div class="content">
-                        <img :src="screenshot(item)" :alt="item.name" width="100%" height="100%">
-                        <span class="tools">
-                            <a-icon class="toolsbutton" type="eye" @click="handlePreview(item)" />
-                            <a-icon class="toolsbutton" type="delete" @click="removefile(item)" />
-                        </span>
-                    </div>
-                </div>
-                <div class="upContent upload" v-if="fileList.length < 6" @click="()=>mideoVisible=true">
-                    <a-icon type="plus" style="font-size: 20px;" />
-                    <span>添加主图</span>
+                    <a-badge :count="badgecount(item.type)" :number-style="badgestyle(item.type)" style="display: block;height: 100%;width: 100%;">
+                        <div class="content" :class="{forbid:item.type==='video'}">
+                            <img :src="screenshot(item)" :alt="item.name" width="100%" height="100%">
+                            <span class="tools">
+                                <a-icon class="toolsbutton" type="eye" @click="handlePreview(item)" />
+                                <a-icon class="toolsbutton" type="delete" @click="removefile(item)" />
+                            </span>
+                        </div>
+                    </a-badge>
                 </div>
             </draggable>
+            <!-- 上传 -->
+            <div class="upContent upload" v-if="fileList.length < 6" @click="()=>mideoVisible=true">
+                <a-icon type="plus" style="font-size: 20px;" />
+                <span>添加主图</span>
+            </div>
         </div>
         <!-- 图片预览 -->
         <a-modal centered :visible="previewVisible" :footer="null" @cancel="handleCancel" width="800px">
@@ -70,9 +74,19 @@
                     if (option.type === 'image') {
                         url = option.url
                     } else {
-                        url = option.url + `?x-oss-process=video/snapshot,t_7000,f_jpg,w_120,h_120,m_fast` 
+                        url = option.url + `?x-oss-process=video/snapshot,t_7000,f_jpg,w_120,h_120,m_fast`
                     }
                     return url
+                }
+            },
+            badgecount(){
+                return function(val){
+                    return val==='video'?'视频':'图片'
+                }
+            },
+            badgestyle(){
+                return function(val){
+                    return val==='video'?{backgroundColor: '#f50'}:{backgroundColor: '#52c41a'}
                 }
             }
         },
@@ -116,7 +130,12 @@
                     return itemOption
                 })
                 this.fileList = newFileList
-            }
+            },
+            //========================================================拖拽===============================================
+            onMove(e) {
+                if (e.relatedContext.element.type === 'video') return false;
+                return true;
+            },
         }
     }
 </script>
@@ -139,7 +158,7 @@
             border: 1px dashed #d9d9d9;
             border-radius: 5px;
             padding: 8px;
-            margin: 0 8px 8px 0;
+            margin: 0 16px 8px 0;
         }
 
         .upload {

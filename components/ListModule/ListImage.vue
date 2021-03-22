@@ -88,6 +88,7 @@
             return {
                 data,
                 selection,
+                selectvideo: false,
                 loading: true,
                 isScroll: true,
                 keyword: '',
@@ -177,6 +178,11 @@
                 const selectList = this.selection
                 if (selectList.some(item => item.id === key)) {
                     this.selection = selectList.filter(selectitem => selectitem.id !== key)
+                } else if (option.type === 'video' && this.selection.some(item => item.type === 'video')) {
+                    this.$message.error('当前已存在视频文件')
+                    return
+                } else if (selectList.length < 6 && option.type === 'video') {
+                    this.selection.unshift(option)
                 } else if (selectList.length < 6) {
                     this.selection.push(option)
                 } else {

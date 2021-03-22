@@ -113,6 +113,7 @@
                         { title: '商品分类', content: '/bwadmin/productclassify', key: 'sub2-9' },
                     ]
                 },
+                { title: '标签管理', content: '/bwadmin/labelmanagement', icon: 'tag', key: '11' },
                 { title: '页面管理', content: '/bwadmin/pagecms', icon: 'cloud-o', key: '12' },
                 { title: '图片管理', content: '/bwadmin/imagecms', icon: 'appstore-o', key: '13' },
                 { title: '询盘中心', content: '/bwadmin/inquirycms', icon: 'team', key: '14' },

@@ -28,6 +28,7 @@ export default {
   plugins: [
     '@/plugins/antd-ui',
     '@/plugins/swiper',
+    '@/plugins/animated',
     {src:'@/plugins/clipboard',ssr:false},
     { src: '@/plugins/cropper', ssr: false },
     { src: '@/plugins/vcolorpicker.js', ssr: false },
