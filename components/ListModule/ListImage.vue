@@ -43,7 +43,7 @@
                         <template slot="title">
                             <span>将该图片插入详情</span>
                         </template>
-                        <a-icon key="select" type="select" @click="insertionImage(imageData.url)" />
+                        <a-icon key="select" type="select" @click="insertionImage(imageData)" />
                     </a-tooltip>
                 </template>
                 <a-card-meta :title="imageData.filename" :description="imageData.updated_at" />

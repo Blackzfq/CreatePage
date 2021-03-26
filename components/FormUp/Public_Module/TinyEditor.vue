@@ -163,9 +163,15 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
             },
             //========================================================插入图片中心的图片===============================================
             setImage(val) {
-                this.editor.insertContent(
-                    `<img class='goodsImg' src='${val}'/>`
-                )
+                if (val.type === 'image') {
+                    this.editor.insertContent(
+                        `<img class='goodsImg' src='${val.url}'/>`
+                    )
+                } else if (val.type === 'video') {
+                    this.editor.insertContent(
+                        `<iframe width="893" height="415" src="https://backstage-public.oss-accelerate.aliyuncs.com/video/test.mp4" frameborder="0" gesture="media" allow="encrypted-media" allowfullscreen></iframe> `
+                    )
+                }
 
             },
             //========================================================搜索图片中心的图片===============================================

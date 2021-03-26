@@ -95,9 +95,9 @@ export function upDataCommoditiesSort(id, data, config) {
 // }
 // // ================商品操作================
 
-// export function addNewCommodity(data) {
-//     return Axios.post(`api/ad/commodities`, data)
-// }
+export function addNewCommodity(data) {
+    return Axios.post(`api/ad/commodities`, data)
+}
 
 export function getCommodity(params) {
     return Axios.get(`api/ad/commodities`, { params })
@@ -253,8 +253,12 @@ export function upMedioFiles(data, config) {
 
 // // ================标签库管理================
 
-export function getLabelList(params){
+export function getCommodityLabelList(params){  //商品标签
     return Axios.get('api/ad/tags', { params })
+}
+
+export function addCommodityLabel(data){
+    return Axios.post(`api/ad/tags`,data)
 }
 
 // // ================公共方法================

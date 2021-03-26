@@ -34,7 +34,7 @@
     </div>
 </template>
 <script>
-    import { getLabelList } from '@/assets/api'
+    import { getCommodityLabelList } from '@/assets/api'
     export default {
         name: 'LabelManagement',
         data() {
@@ -74,7 +74,7 @@
             //初始化
             getLabelData(params = {}) {
                 this.loading=true
-                getLabelList(params)
+                getCommodityLabelList(params)
                     .then(({ data: { data: labels } }) => {
                         this.labels = [...labels]
                     })
@@ -100,7 +100,7 @@
                 }
                 this.loading=true
                 this.labels=new Array()
-                getLabelList(params)
+                getCommodityLabelList(params)
                     .then(({ data: { data: labels } }) => {
                         this.labels = [...labels]
                     })

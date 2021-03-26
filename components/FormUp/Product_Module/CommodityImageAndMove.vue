@@ -112,14 +112,15 @@
             },
             handleChange({ fileList }) {
                 this.fileList = fileList;
+                this.$emit('change',fileList)
             },
             //========================================================搜索图片中心的图片===============================================
             onSearch(e) {
                 const params = this.search
                 this.$refs.listImage.onSearch(params)
             },
-            setFileList(fileList) {
-                const newFileList = fileList.map(option => {
+            setFileList(_fileList) {
+                const fileList = _fileList.map(option => {
                     const itemOption = {
                         uid: option.id,
                         name: option.filename,
@@ -129,7 +130,7 @@
                     }
                     return itemOption
                 })
-                this.fileList = newFileList
+                this.handleChange({fileList})
             },
             //========================================================拖拽===============================================
             onMove(e) {
