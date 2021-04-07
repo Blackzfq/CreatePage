@@ -14,7 +14,8 @@
             </a-col>
         </a-row>
         <a-divider />
-        <ListTable ref="listTable" :columns="columns" :data="data" @eitor="onEitor" />
+        <ListTable ref="listTable" scene="listTree" :columns="columns" :data="data" :pagination="pagination"
+            @eitor="onEitor" @fetch="onFetch" @remove="onRemove" />
         <!-- 弹窗 -->
         <a-modal v-model="visible" :footer="null" :getContainer="()=>$refs.ProductClassify" width="1200px"
             :bodyStyle="{height:'700px',overflow:'auto'}" centered destroyOnClose>
@@ -27,56 +28,32 @@
             </span>
             <a-spin wrapperClassName="mywrapperClassName" :spinning="upLoading">
                 <a-icon slot="indicator" type="loading" style="font-size: 24px" spin />
-                <SortForm :redactKey="redactKey" @onpercent="(val)=>{percent=val}" @changeLoading="(val)=>{upLoading=val}" />
+                <SortForm :redactKey="redactKey" @onpercent="(val)=>{percent=val}"
+                    @changeLoading="(val)=>{upLoading=val}" />
             </a-spin>
         </a-modal>
     </div>
 </template>
 <script>
-    import { getCommoditiesSort } from '@/assets/api'
-    const columns = [
-        {
-            title: '名称',
-            dataIndex: 'title',
-            width: '20%',
-            scopedSlots: {
-                customRender: 'name',
-                filterDropdown: 'filterNameDropdown',
-                filterIcon: 'searchIcon',
-            }
-        },
-        {
-            title: '时间',
-            dataIndex: 'date',
-            scopedSlots: {
-                filterDropdown: 'filterDateDropdown',
-                filterIcon: 'filtereIcon',
-            }
-        },
-        {
-            title: '置顶',
-            dataIndex: 'stick',
-            scopedSlots: { customRender: 'stick' },
-        },
-        {
-            title: '功能区',
-            dataIndex: 'action',
-            scopedSlots: { customRender: 'action' },
-        },
-    ];
+    import { getCommoditiesSort, deleteCommoditiesSort } from '@/assets/api'
+    const pagination = {
+        position: 'bottom',
+        pageSize: 10,//每页的条数
+        current: 1,//当前页
+    };
     const data = [];
     export default {
         name: 'ProductClassify',
         data() {
             return {
-                columns,
+                pagination,
                 data,
                 loading: false,
                 upLoading: false,
                 visible: false,
                 modalTitle: '',
                 percent: 0,
-                redactKey:''
+                redactKey: ''
             }
         },
         filters: {
@@ -92,7 +69,42 @@
                 return title
             }
         },
-        mounted(){
+        computed: {
+            columns() {
+                const columns = [
+                    {
+                        title: '名称',
+                        dataIndex: 'title',
+                        width: '20%',
+                        // scopedSlots: {
+                        //     customRender: 'name',
+                        //     filterDropdown: 'filterNameDropdown',
+                        //     filterIcon: 'searchIcon',
+                        // }
+                    },
+                    {
+                        title: '时间',
+                        dataIndex: 'date',
+                        // scopedSlots: {
+                        //     filterDropdown: 'filterDateDropdown',
+                        //     filterIcon: 'filtereIcon',
+                        // }
+                    },
+                    {
+                        title: '置顶',
+                        dataIndex: 'stick',
+                        scopedSlots: { customRender: 'stick' },
+                    },
+                    {
+                        title: '功能区',
+                        dataIndex: 'action',
+                        scopedSlots: { customRender: 'action' },
+                    },
+                ];
+                return columns
+            }
+        },
+        mounted() {
             this.getSortData()
         },
         methods: {
@@ -103,17 +115,56 @@
             },
             //进入编辑
             onEitor(params) {
-                this.redactKey=params.key
+                this.redactKey = params.key
                 this.modalTitle = params.title
                 this.visible = true
+            },
+            //处理页码
+            async onFetch(params) {
+                await this.refreshData()
+                let { current } = params
+                const pageSize = Math.ceil(this.data.length / 10)
+                if (current > pageSize) {
+                    this.pagination = { ...Object.assign({}, params).current = pageSize }
+                } else {
+                    this.pagination = { ...params }
+                }
+            },
+            //删除数据
+            onRemove(params) {
+                deleteCommoditiesSort(params.key)
+                    .then(() => {
+                        this.$notification.open({
+                            message: `成功通知`,
+                            description:
+                                `分类${params.title}已经成功删除`,
+                            placement: 'bottomRight',
+                        });
+                        this.refreshData()
+                    })
+                    .catch(err => {
+                        console.log(err.response)
+                        this.$notification.open({
+                            message: `失败通知`,
+                            description:
+                                `${err.response.status} ${err.response.data.message}`,
+                            placement: 'bottomRight',
+                        });
+                    })
+                    .finally(
+                        () => {
+                            this.loading = false
+                            this.$refs.listTable.changeLoading(false)
+                        }
+                    )
             },
             //获取分类数据
             getSortData() {
                 this.$refs.listTable.changeLoading(true)
                 getCommoditiesSort()
-                    .then(({data:{data:sortData}})=>{
-                        const gData=this.formattingData(sortData)
-                        this.data=gData
+                    .then(({ data: { data: sortData } }) => {
+                        const gData = this.formattingData(sortData)
+                        this.data = gData
                     })
                     .catch(() => {
                         this.$notification.open({
@@ -131,22 +182,22 @@
                     )
             },
             //处理分类数据
-            formattingData(arr){
-                const newArr=arr.map(item=>{
-                    const sourceItem={
-                        key:item.id,
-                        url:item.main_img_url,
-                        title:item.name,
-                        date:item.created_at,
-                        stick:item.attrSort?'1':'0'
+            formattingData(arr) {
+                const newArr = arr.map(item => {
+                    const sourceItem = {
+                        key: item.id,
+                        url: item.main_img_url,
+                        title: item.name,
+                        date: item.created_at,
+                        stick: item.attrSort ? '1' : '0'
                     }
-                    if(item.twoLevelCommodityTypes||item.threeLevelCommodityTypes){
-                        const params=item.twoLevelCommodityTypes||item.threeLevelCommodityTypes
-                        if(params.length!==0){
-                            sourceItem.children=this.formattingData(params)
+                    if (item.twoLevelCommodityTypes || item.threeLevelCommodityTypes) {
+                        const params = item.twoLevelCommodityTypes || item.threeLevelCommodityTypes
+                        if (params.length !== 0) {
+                            sourceItem.children = this.formattingData(params)
                         }
                     }
-                    return Object.assign({},sourceItem)
+                    return Object.assign({}, sourceItem)
                 })
                 return newArr
             }

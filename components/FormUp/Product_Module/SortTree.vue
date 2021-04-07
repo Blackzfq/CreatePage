@@ -20,9 +20,15 @@
 </template>
 
 <script>
-  import { getCommoditiesSort } from '@/assets/api'
+  import { getCommoditiesSort, getBlogTypeList } from '@/assets/api'
   export default {
     name: 'SortTree',
+    props: {
+      scene: {
+        type: String,
+        default: 'product' //商品|博客 "product"|"blog"
+      }
+    },
     data() {
       return {
         spin: false,
@@ -36,7 +42,7 @@
     },
     watch: {
       checkedKeys(val) {
-        this.$emit('onCheck', val)
+        this.$emit('onCheck', val,)
       },
     },
     mounted() {
@@ -92,19 +98,36 @@
       //获取分类树
       getSortList() {
         this.spin = true
-        getCommoditiesSort()
-          .then(({ data: { data: ListData } }) => {
-            this.gData = this.restFormat(ListData)
-            console.log(this.gData)
-            this.generateList(this.gData)
-            setTimeout(() => {
-              this.spin = false
-            }, 1000)
-          })
-          .catch(err => {
-            this.$message.error('分类获取失败')
-          })
-          .finally()
+        switch (this.scene) {
+          case 'product':
+            getCommoditiesSort()
+              .then(({ data: { data: ListData } }) => {
+                this.gData = this.restFormat(ListData)
+                this.generateList(this.gData)
+                setTimeout(() => {
+                  this.spin = false
+                }, 1000)
+              })
+              .catch(err => {
+                this.$message.error('分类获取失败')
+              })
+              .finally()
+            break
+          case 'blog':
+            getBlogTypeList()
+              .then(({ data: { data: ListData } }) => {
+                this.gData = this.restFormat(ListData)
+                this.generateList(this.gData)
+                setTimeout(() => {
+                  this.spin = false
+                }, 1000)
+              })
+              .catch(err => {
+                this.$message.error('分类获取失败')
+              })
+              .finally()
+            break
+        }
       },
       //配置分类树格式 2021/3/15 改
       restFormat(arr) {
@@ -122,6 +145,15 @@
           return Object.assign({}, newItem)
         })
         return format
+      },
+      //提供父组件调用
+      restSortTree(commodity_types) {
+        this.getSortList()
+        if (commodity_types) {
+          this.checkedKeys = commodity_types.map(o => o.id)
+        } else {
+          this.checkedKeys = new Array()
+        }
       }
     },
   };

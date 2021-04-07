@@ -1,5 +1,6 @@
 <template>
-    <a-select labelInValue mode="multiple" style="width: 100%" placeholder="商品标签" @focus="onFocus" @change="handleChange">
+    <a-select labelInValue mode="multiple" style="width: 100%" placeholder="商品标签" v-model="value" @focus="onFocus"
+        @change="handleChange">
         <div slot="dropdownRender" slot-scope="menu">
             <v-nodes :vnodes="menu" />
             <a-divider style="margin: 4px 0;" />
@@ -19,6 +20,7 @@
         name: 'TagsSelect',
         data() {
             return {
+                value: [],
                 labels: [],
                 editor: false,
                 fetching: true,
@@ -33,11 +35,12 @@
         methods: {
             handleChange(value) {
                 this.editor = false
-                this.$emit('change',value)
+                this.value = value
+                this.$emit('change', value)
             },
-            getLabels() {
-                this.fetching=true
-                getCommodityLabelList()
+            async getLabels() {
+                this.fetching = true
+                await getCommodityLabelList()
                     .then(({ data: { data: labels } }) => {
                         this.labels = [...labels]
                     })
@@ -50,7 +53,7 @@
                             duration: 0,
                         })
                     })
-                    .finally(()=>{
+                    .finally(() => {
                         this.fetching = false
                     })
             },
@@ -80,9 +83,40 @@
                 });
             },
             onFocus() {
-                if (this.fetching||this.labels.length===0) {
+                if (this.fetching || this.labels.length === 0) {
                     this.getLabels()
                 }
+            },
+            restTagesSelect(tags) {
+                this.onFocus()
+                if (tags) {
+                    this.value = tags.map(o => {
+                        const option = {
+                            key: o.id,
+                            label: o.name
+                        }
+                        return option
+                    })
+                } else {
+                    this.value = new Array()
+                }
+            },
+            //通过id查找对象
+            async restTagesSelect_planm_B(tags) {
+                let tagsList = new Array()
+                await this.getLabels()
+                const cloneLabels = this.labels.map(element => {
+                    const option = {
+                        key: element.id,
+                        label: element.name
+                    }
+                    return option
+                })
+                tags.forEach(option => {
+                    const item = cloneLabels.filter(f => f.key === option)[0]
+                    if (item) tagsList.push(item)
+                })
+                this.value=tagsList
             }
         },
     };

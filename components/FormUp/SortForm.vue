@@ -52,14 +52,16 @@
                     <a-input v-model="form.seo_url" placeholder="自定义链接" />
                 </a-form-model-item>
                 <a-form-model-item :wrapper-col="{span:12,offset:12}">
-                    <a-button-group>
-                        <a-button type="primary" v-if="!redactKey" @click="onSubmit">
+                    <a-button-group v-if="!redactKey">
+                        <a-button type="primary"  @click="onSubmit">
                             创建
                         </a-button>
-                        <a-button v-if="!redactKey" @click="resetForm">
+                        <a-button  @click="resetForm">
                             重置
                         </a-button>
-                        <a-button type="primary" v-else @click="onEitor">
+                    </a-button-group>
+                    <a-button-group v-else>
+                        <a-button type="primary"  @click="onEitor">
                             编辑
                         </a-button>
                     </a-button-group>
@@ -111,7 +113,7 @@
     </div>
 </template>
 <script>
-    import { addNewCommoditiesSort, getCommoditiesSortDetails, upDataCommoditiesSort } from '@/assets/api'
+    import { addNewCommoditiesSort, getCommoditiesSortDetails, upDataCommoditiesSort } from '@/assets/api' 
     const form = {
         name: '',//分类名称
         main_img_url: '',//分类主图

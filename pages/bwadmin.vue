@@ -101,10 +101,8 @@
                 {
                     title: '博客管理', icon: 'video-camera', key: 'sub1', children: [
                         { title: '博客列表', content: '/bwadmin/bloglist', key: 'sub1-2' },
-                        { title: '创建博客', content: '/bwadmin/createblog', key: 'sub1-3' },
                         { title: '博客分类', content: '/bwadmin/blogclassify', key: 'sub1-5' },
                         { title: '评论管理', content: '/bwadmin/commentlist', key: 'sub1-4' },
-                        { title: '标签管理', content: '/bwadmin/blogtag', key: 'sub1-6' }
                     ]
                 },
                 {

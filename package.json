@@ -1,14 +1,15 @@
 {
-  "name": "CreatePages",
+  "name": "nuxt-backstage",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "nuxt",
     "build": "nuxt build",
-    "start": "nuxt start",
+    "start": "PORT=3005 nuxt start",
     "generate": "nuxt generate"
   },
   "dependencies": {
+    "@nuxt/ufo": "^0.5.4",
     "@nuxtjs/robots": "^2.4.2",
     "@nuxtjs/sitemap": "^2.4.0",
     "@tinymce/tinymce-vue": "^3.2.4",
@@ -16,6 +17,7 @@
     "ant-design-vue": "^1.7.2",
     "axios": "^0.20.0",
     "core-js": "^3.8.3",
+    "file-saver": "^2.0.5",
     "normalize.css": "^8.0.1",
     "nuxt": "^2.14.12",
     "swiper": "^5.3.7",
@@ -24,7 +26,8 @@
     "vue-awesome-swiper": "^4.1.0",
     "vue-clipboard2": "^0.3.1",
     "vue-cropper": "^0.5.5",
-    "vuedraggable": "^2.24.3"
+    "vuedraggable": "^2.24.3",
+    "xlsx": "^0.16.9"
   },
   "devDependencies": {
     "node-sass": "^4.14.1",

@@ -34,6 +34,32 @@ export function login(data) {
 
 // // ================博客管理================
 // //管理员
+
+// *新增博客
+export function addBlog(data) {
+    return Axios.post(`api/ad/blogs`, data);
+}
+
+// *删除博客
+export function delBlog(params) {
+    return Axios.delete(`api/ad/blogs/_delete`, { params });
+}
+
+// *修改博客信息
+export function updataBlog(id, data) {
+    return Axios.post(`api/ad/blogs/${id}/_update`, data);
+}
+
+// *查看博客列表
+export function getBlogList(params) {
+    return Axios.get(`api/ad/blogs`, { params });
+}
+
+// *查看博客详情
+export function getBlogInfo(id) {
+    return Axios.get(`api/ad/blogs/${id}`);
+}
+
 // export function addNewBlog(data) {
 //     return Axios.post(`api/ad/articles`, data)
 // }
@@ -63,7 +89,61 @@ export function login(data) {
 //     return Https.get(`http://xintai.api.lanjingshuzi.com/api/articles/${data}`)
 // }
 
-// // ================商品分类================
+// **********************博客分类***********************
+
+// *新增博客分类
+export function addBlogType(data) {
+    return Axios.post(`api/ad/blog/types`, data);
+}
+
+// *根据分类id删除当前分类
+export function delBlogType(id) {
+    return Axios.delete(`api/ad/blog/types/${id}`);
+}
+
+// *修改博客分类
+export function updateBlogType(id, data) {
+    return Axios.put(`api/ad/blog/types/${id}`, data);
+}
+
+// *查看博客分类列表
+export function getBlogTypeList(data) {
+    return Axios.get(`api/blog/types`, data);
+}
+
+// *查看博客分类详情
+export function getBlogTypeInfo(id, config) {
+    return Axios.get(`api/blog/types/${id}`, config);
+}
+
+// **********************博客评论***********************
+
+// *新增/回复博客评论
+export function addComment(data){
+    return Axios.post(`api/blog/comments`, data);
+  }
+  
+  // *删除博客评论
+  export function delComment(id){
+    return Axios.delete(`api/ad/blog/comments/${id}`);
+  }
+  
+  // *修改评论
+  export function updateComment(id,data){
+    return Axios.put(`api/ad/blog/comments/${id}`,data)
+  }
+  
+  // *查看评论
+  export function getComment(params){
+    return Axios.get(`api/ad/blog/comments`,{params})
+  }
+  
+  // *查看评论详情
+  export function getCommentInfo(id){
+    return Axios.get(`api/ad/blog/comments/${id}`)
+  }
+
+// ================商品分类================
 
 export function addNewCommoditiesSort(data, config) {
     return Axios.post(`api/ad/commodity/types`, data, config)
@@ -81,9 +161,9 @@ export function upDataCommoditiesSort(id, data, config) {
     return Axios.post(`api/ad/commodity/types/${id}/_update`, data, config)
 }
 
-// export function deleteCommoditiesSort(data) {
-//     return Axios.delete(`api/ad/commodity/types/${data}`)
-// }
+export function deleteCommoditiesSort(data) {
+    return Axios.delete(`api/ad/commodity/types/${data}`)
+}
 
 // //客户
 // export function user_getCommoditiesSort(params) {
@@ -103,21 +183,25 @@ export function getCommodity(params) {
     return Axios.get(`api/ad/commodities`, { params })
 }
 
-// export function upDataCommodity(id, data) {
-//     return Axios.post(`api/ad/commodities/${id}/_update`, data)
-// }
+export function upDataCommodity(id, data) {
+    return Axios.post(`api/ad/commodities/${id}/_update`, data)
+}
 
-// export function deleteCommodity(params) {
-//     return Axios.delete(`api/ad/commodities/_delete`, { params })
-// }
+export function deleteCommodity(params) {
+    return Axios.delete(`api/ad/commodities/_delete`, { params })
+}
 
 // export function getCommodityDetails(data) {
 //     return Axios.get(`api/ad/commodities/${data}`)
 // }
 
-// export function copyCommodity(id) {
-//     return Axios.get(`api/ad/commodities/${id}/_copy`)
-// }
+export function copyCommodity(id) {
+    return Axios.get(`api/ad/commodities/${id}/_copy`)
+}
+
+export function batchCommodity(data) {
+    return Axios.post(`api/ad/commodities/batch/_handle`, data)
+}
 
 
 // //客户
@@ -253,12 +337,22 @@ export function upMedioFiles(data, config) {
 
 // // ================标签库管理================
 
-export function getCommodityLabelList(params){  //商品标签
+export function getCommodityLabelList(params) {  //商品标签
     return Axios.get('api/ad/tags', { params })
 }
 
-export function addCommodityLabel(data){
-    return Axios.post(`api/ad/tags`,data)
+export function addCommodityLabel(data) {
+    return Axios.post(`api/ad/tags`, data)
+}
+
+// *新增博客标签
+export function addBlogTags(data) {
+    return Axios.post(`api/ad/blog/tags`, data);
+}
+
+// *查看博客标签列表
+export function getBlogTagsList(params) {
+    return Axios.get(`api/blog/tags`, {params});
 }
 
 // // ================公共方法================

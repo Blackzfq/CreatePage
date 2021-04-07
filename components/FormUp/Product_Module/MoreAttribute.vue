@@ -1,11 +1,11 @@
 <template>
     <div ref="MoreAttribute" class="MoreAttribute">
-        <a-checkbox @change="onChange">
+        <a-checkbox :checked="check" @change="onChange">
             此产品有多个选项，例如不同的尺寸或颜色
         </a-checkbox>
         <div class="checkeitor_box" v-if="visible">
             <a-divider />
-            <draggable v-model="attributeData">
+            <draggable v-model="attributeData" @sort="cloumnSort">
                 <a-input-group compact v-for="(groupItem,groupIndex) in attributeData" :key="groupIndex"
                     style="margin-bottom: 15px;">
                     <a-input style="width: 20%" placeholder="选项名称" v-model="groupItem.name" />
@@ -23,7 +23,7 @@
             <div class="preview">
                 <div class="grid-parent" v-for="(attribute,index) in attributeData" :key="attribute.name+index">
                     <div class="name">{{attribute.name}}</div>
-                    <draggable element="ul" v-model="attribute.children">
+                    <draggable element="ul" v-model="attribute.children" @sort="rowSort">
                         <li v-for="(childrenItem,childrenKey) in attribute.children">
                             <img :src="childrenItem.url" :alt="childrenItem.label" v-if="childrenItem.url" width="76px"
                                 height="50px">
@@ -57,7 +57,9 @@
         data() {
 
             return {
-                //多熟悉data
+                //是否显示多属性
+                check: false,
+                //多属性data
                 visible: false,
                 attributeData: [{ name: '', children: [] }],
                 //媒体中心data
@@ -77,16 +79,33 @@
         methods: {
             onChange(e) {
                 this.visible = e.target.checked
-                e.target.checked ? this.handleChange(this.attributeData) : this.handleChange(null)
+                e.target.checked ? this.handleChange(this.attributeData) : this.handleChange([])
+                this.check = e.target.checked ? true : false
             },
             handleChange(value) {
-                this.$emit('change', value)
+                const filterA = value.filter(item => item.name !== '' && item.children !== 0)
+                filterA.length !== 0 ? this.$emit('change', value) : this.$emit('change', null)
             },
             addAttributeData() {
                 this.attributeData.some(option => !option.name.trim() || option.children.length == 0) ? this.$message.warning('当前属性列表中存在空值，请检查') : this.attributeData.push({ name: '', children: [] });
             },
             onDeselect(value, option) {
                 console.log(value, option)
+            },
+            cloumnSort(){
+                this.$emit('change',this.attributeData)
+            },
+            rowSort(){
+                this.$emit('change',this.attributeData)
+            },
+            restAttribute(list) {
+                if (list) {
+                    this.attributeData = list
+                    this.check = this.visible = true
+                } else {
+                    this.attributeData = [{ name: '', children: [] }]
+                    this.check = this.visible = false
+                }
             },
             //========================================================搜索图片中心的图片===============================================
             onSearch(e) {

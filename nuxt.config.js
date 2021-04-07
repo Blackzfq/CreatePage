@@ -29,6 +29,7 @@ export default {
     '@/plugins/antd-ui',
     '@/plugins/swiper',
     '@/plugins/animated',
+    '@/plugins/excel.js',
     {src:'@/plugins/clipboard',ssr:false},
     { src: '@/plugins/cropper', ssr: false },
     { src: '@/plugins/vcolorpicker.js', ssr: false },
@@ -47,5 +48,7 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+    // analyze: true,
+    publicPath: '/.nuxt/dist/client'
   }
 }

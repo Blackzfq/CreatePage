@@ -7,7 +7,7 @@
 <template>
     <div class="ListImage" @scroll="onScroll">
         <div class="ImageList">
-            <a-card hoverable style="width: 100%" v-for="(imageData,imageIndex) in data" :key="imageData.id"
+            <a-card hoverable style="width: 100%" v-for="(imageData,imageIndex) in data" :key="imageData.id" 
                 @click="setSelect(imageData)">
                 <template slot="cover">
                     <div class="coverimage">
@@ -195,6 +195,10 @@
             deleteFile(key) {
                 this.selection = this.selection.filter(item => item.id !== key)
                 // console.log(this.selection)
+            },
+            // 选中图片
+            seleceFile(fileList){
+                this.selection=fileList
             },
             // 复制成功时的回调函数
             onCopy(e) {

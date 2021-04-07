@@ -11,10 +11,11 @@
         </a-empty>
         <!-- 自定义已存在内容 -->
         <div class="bw-upload" v-else>
-            <draggable v-model="fileList" filter=".forbid" :move="onMove">
+            <draggable v-model="fileList" filter=".forbid" :move="onMove" @sort="sort">
                 <!-- 主图 -->
                 <div class="upContent updone" v-for="item in fileList" :key="item.key">
-                    <a-badge :count="badgecount(item.type)" :number-style="badgestyle(item.type)" style="display: block;height: 100%;width: 100%;">
+                    <a-badge :count="badgecount(item.type)" :number-style="badgestyle(item.type)"
+                        style="display: block;height: 100%;width: 100%;">
                         <div class="content" :class="{forbid:item.type==='video'}">
                             <img :src="screenshot(item)" :alt="item.name" width="100%" height="100%">
                             <span class="tools">
@@ -43,8 +44,18 @@
                 图片管理
                 <a-input-search placeholder="请输入图片的名称进行检索" style="width:300px;margin-left:24px;" v-model="search"
                     @change="onSearch" />
+                <a-button type="primary" @click="()=>Upvisible=true">
+                    添加文件
+                </a-button>
+                <a-icon type="reload" :spin="loading" style="margin-left: 15px;" @click="refreshData" />
             </span>
-            <ListImage scene multiple ref="listImage" :flie-list="fileList" @change="setFileList" />
+            <ListImage scene multiple ref="listImage" :updeData="updata" :flie-list="fileList" @change="setFileList" />
+        </a-modal>
+        <!-- 上传图片弹窗 -->
+        <a-modal v-model="Upvisible" title="上传图片" height="800px" :footer="null"
+            :getContainer="()=>$refs.CommodityImageAndMove" :mask="false" :bodyStyle="{height:'600px',overflow:'auto'}"
+            centered>
+            <MideoEditor @succee="onSuccee" />
         </a-modal>
     </div>
     </div>
@@ -59,6 +70,9 @@
         data() {
 
             return {
+                loading: false,
+                Upvisible: false,
+                updata: null,
                 previewVisible: false,
                 mideoVisible: false,
                 isVideo: false,
@@ -79,14 +93,14 @@
                     return url
                 }
             },
-            badgecount(){
-                return function(val){
-                    return val==='video'?'视频':'图片'
+            badgecount() {
+                return function (val) {
+                    return val === 'video' ? '视频' : '图片'
                 }
             },
-            badgestyle(){
-                return function(val){
-                    return val==='video'?{backgroundColor: '#f50'}:{backgroundColor: '#52c41a'}
+            badgestyle() {
+                return function (val) {
+                    return val === 'video' ? { backgroundColor: '#f50' } : { backgroundColor: '#52c41a' }
                 }
             }
         },
@@ -112,12 +126,51 @@
             },
             handleChange({ fileList }) {
                 this.fileList = fileList;
-                this.$emit('change',fileList)
+                this.$emit('change', this.fileList)
+            },
+            sort() {
+                this.$emit('change', this.fileList)
+            },
+            restFile(fileList) {
+                let myList
+                if (fileList.some(o => o.constructor !== Object)) {
+                    myList = JSON.parse(localStorage.getItem('BWPRODUCT_ADD_FILE')).map(option => {
+                        const file = {
+                            uid: option.id,
+                            name: option.name,
+                            type: option.type,
+                            url: option.url,
+                            status: 'done'
+                        }
+                        return file
+                    });
+                } else {
+                    myList = fileList.map(option => {
+                        const file = {
+                            uid: option.id,
+                            name: option.filename,
+                            type: option.type,
+                            url: option.url,
+                            status: 'done'
+                        }
+                        return file
+                    });
+                }
+                this.fileList = myList
+                this.$refs.listImage.seleceFile(fileList)
             },
             //========================================================搜索图片中心的图片===============================================
             onSearch(e) {
                 const params = this.search
                 this.$refs.listImage.onSearch(params)
+            },
+            async refreshData() {
+                this.loading = true
+                await this.$refs.listImage.resetImageList()
+                this.loading = false
+            },
+            onSuccee(value) {
+                this.updata = value
             },
             setFileList(_fileList) {
                 const fileList = _fileList.map(option => {
@@ -130,7 +183,7 @@
                     }
                     return itemOption
                 })
-                this.handleChange({fileList})
+                this.handleChange({ fileList })
             },
             //========================================================拖拽===============================================
             onMove(e) {

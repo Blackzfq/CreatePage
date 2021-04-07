@@ -12,8 +12,17 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
                 图片管理
                 <a-input-search placeholder="请输入图片的名称进行检索" style="width:300px;margin-left:24px;" v-model="search"
                     @change="onSearch" />
+                <a-button type="primary" @click="()=>Upvisible=true">
+                    添加文件
+                </a-button>
+                <a-icon type="reload" :spin="loading" style="margin-left: 15px;" @click="refreshData"/>
             </span>
-            <ListImage scene ref="listImage" @insertion="setImage" />
+            <ListImage scene ref="listImage" :updeData="updata" @insertion="setImage" />
+        </a-modal>
+        <!-- 上传图片弹窗 -->
+        <a-modal v-model="Upvisible" title="上传图片" height="800px" :footer="null" :getContainer="()=>$refs.TinyEditor"
+            :mask="false" :bodyStyle="{height:'600px',overflow:'auto'}" centered>
+            <MideoEditor @succee="onSuccee"/>
         </a-modal>
     </div>
 </template>
@@ -59,6 +68,9 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
 
             return {
                 visible: false,
+                Upvisible:false,
+                updata:null,
+                loading:false,
                 search: '',
                 value: '',
                 editor: null,
@@ -88,25 +100,6 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
                         table: { title: '表格', items: 'inserttable tableprops deletetable | cell row column' },
                         tools: { title: '工具', items: 'spellchecker code' }
                     },
-                    // images_upload_handler: async (blobInfo, success, failure) => {//自定义上传图片
-                    //     const params = {
-                    //         bucket: 'public',
-                    //         type: 'image',
-                    //         fileName: blobInfo.blob().name,
-                    //         scene: this.scene
-                    //     }
-                    //     const { data } = await getOssSignatures(params)
-                    //     const upLoadingImgData = new FormData()
-                    //     upLoadingImgData.append("key", data.data.dir)
-                    //     upLoadingImgData.append("policy", data.data.policy)
-                    //     upLoadingImgData.append("OSSAccessKeyId", data.data.access_id)
-                    //     upLoadingImgData.append("signature", data.data.signature)
-                    //     upLoadingImgData.append("callback", data.data.callback)
-                    //     upLoadingImgData.append("file", blobInfo.blob())
-                    //     await this.upImgFiletoAlioss(upLoadingImgData, `https://xintai-test-public.oss-cn-hangzhou.aliyuncs.com/${data.data.dir}`)
-                    //     success(`https://xintai-test-public.oss-cn-hangzhou.aliyuncs.com/${data.data.dir}`);
-                    //     failure(`图片上传失败`)
-                    // },
                     content_style: "p{color: #666666;} span{color: #666666;}",
                     table_default_styles: { 'border-color': '#000000', 'width': '100%' },
                     fontsize_formats: '11px 12px 14px 16px 18px 24px 36px 48px 50px 56px 60px 64px',
@@ -179,6 +172,14 @@ initialize  初始化文本数据   Function    this.$refs.editor.initialize()
                 const params = this.search
                 this.$refs.listImage.onSearch(params)
             },
+            async refreshData() {
+                this.loading = true
+                await this.$refs.listImage.resetImageList()
+                this.loading=false
+            },
+            onSuccee(value){
+                this.updata=value
+            }
         }
     }
 </script>

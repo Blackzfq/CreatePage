@@ -23,7 +23,7 @@
         <div class="tagListConeten">
             <h2 class="animate__animated  animate__rubberBand animate__infinite" v-if="loading">正在努力检索中......</h2>
             <template v-for="(item,index) in labels" v-else>
-                <a-tag closable :color="colorList[Math.floor(Math.random()*10)]"
+                <a-tag  :color="colorList[Math.floor(Math.random()*10)]"
                     class="animate_tag animate__animated animate__zoomInUp animate__fast"
                     :style="delay(index,labels.length)" v-if="item.id">
                     {{item.name}}
@@ -34,13 +34,13 @@
     </div>
 </template>
 <script>
-    import { getCommodityLabelList } from '@/assets/api'
+    import { getCommodityLabelList, getBlogTagsList } from '@/assets/api'
     export default {
         name: 'LabelManagement',
         data() {
 
             return {
-                loading:false,
+                loading: false,
                 tags: ['博客标签', '商品标签'],
                 selectedTags: ['博客标签'],
                 labels: [],
@@ -72,53 +72,64 @@
                 }
             },
             //初始化
-            getLabelData(params = {}) {
-                this.loading=true
-                getCommodityLabelList(params)
-                    .then(({ data: { data: labels } }) => {
-                        this.labels = [...labels]
-                    })
-                    .catch(() => {
-                        this.$notification.open({
-                            message: `失败提醒`,
-                            description:
-                                `标签列表获取失败，请尝试重新获取`,
-                            placement: 'bottomRight',
-                            duration: 0,
+            async getLabelData(params = {}) {
+                const selectedTags = this.selectedTags
+
+                this.loading = true
+                if (selectedTags.length !== 2 && selectedTags.some(o => o === '商品标签')) {
+                    getCommodityLabelList(params)
+                        .then(({ data: { data: labels } }) => {
+                            this.labels = [...labels]
                         })
-                    }
-                    )
-                    .finally(()=>{
-                        setTimeout(()=>{
-                            this.loading=false
-                        },3000)
-                    })
+                        .catch(() => {
+                            this.$notification.open({
+                                message: `失败提醒`,
+                                description:
+                                    `标签列表获取失败，请尝试重新获取`,
+                                placement: 'bottomRight',
+                                duration: 0,
+                            })
+                        }
+                        )
+                        .finally(() => {
+                            setTimeout(() => {
+                                this.loading = false
+                            }, 3000)
+                        })
+                } else if (selectedTags.length !== 2 && selectedTags.some(o => o === '博客标签')) {
+                    getBlogTagsList(params)
+                        .then(({ data: { data: labels } }) => {
+                            this.labels = [...labels]
+                        })
+                        .catch(() => {
+                            this.$notification.open({
+                                message: `失败提醒`,
+                                description:
+                                    `标签列表获取失败，请尝试重新获取`,
+                                placement: 'bottomRight',
+                                duration: 0,
+                            })
+                        }
+                        )
+                        .finally(() => {
+                            setTimeout(() => {
+                                this.loading = false
+                            }, 3000)
+                        })
+                } else {
+                    const productLabels=await getCommodityLabelList(params)
+                    const blogLabels=await getBlogTagsList(params)
+                    this.labels=[...productLabels.data.data,...blogLabels.data.data]
+                    this.loading = false
+                }
             },
             onSearch(val) {
-                const params={
+                const params = {
                     name: val
                 }
-                this.loading=true
-                this.labels=new Array()
-                getCommodityLabelList(params)
-                    .then(({ data: { data: labels } }) => {
-                        this.labels = [...labels]
-                    })
-                    .catch(() => {
-                        this.$notification.open({
-                            message: `失败提醒`,
-                            description:
-                                `标签列表获取失败，请尝试重新获取`,
-                            placement: 'bottomRight',
-                            duration: 0,
-                        })
-                    }
-                    )
-                    .finally(()=>{
-                        setTimeout(()=>{
-                            this.loading=false
-                        },3000)
-                    })
+                this.loading = true
+                this.labels = new Array()
+                this.getLabelData(params)
             }
         },
     }

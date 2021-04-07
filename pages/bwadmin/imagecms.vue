@@ -1,6 +1,6 @@
 <template>
     <div class="ImageCms" ref="ImageCms">
-        <div class="tootl" style="position: sticky;top: 0;background-color: #FFF;z-index: 5">
+        <div class="tootl" style="position: sticky;top: 0;background-color: #FFF;z-index: 5"> 
             <a-row type="flex" justify="space-between">
                 <a-col :span="12">
                     <span style="font-size: 16px;">文件管理</span>

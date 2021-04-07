@@ -59,7 +59,7 @@
                             </a-dropdown>
                         </a-col>
                     </a-row>
-                    <CommodityImageAndMove @change="onMidoChange" />
+                    <CommodityImageAndMove ref="mce" @change="onMidoChange" />
                 </a-form-model-item>
                 <a-form-model-item>
                     <span slot="label">
@@ -69,7 +69,7 @@
                             <a-icon type="question-circle-o" />
                         </a-tooltip>
                     </span>
-                    <MoreAttribute @change="onArrtChange" />
+                    <MoreAttribute ref="moreAttribute" @change="onArrtChange" />
                 </a-form-model-item>
                 <p>搜索引擎优化</p>
                 <a-divider />
@@ -102,12 +102,17 @@
                     <a-input v-model="form.seo_url" placeholder="自定义链接" />
                 </a-form-model-item>
                 <a-form-model-item :wrapper-col="{span:12,offset:12}">
-                    <a-button-group>
+                    <a-button-group v-if="isAdd">
                         <a-button type="primary" @click="onSubmit">
                             创建
                         </a-button>
                         <a-button>
                             重置
+                        </a-button>
+                    </a-button-group>
+                    <a-button-group v-else>
+                        <a-button type="primary" @click="onEitor">
+                            编辑
                         </a-button>
                     </a-button-group>
                 </a-form-model-item>
@@ -134,7 +139,7 @@
                                 <a-icon type="question-circle-o" />
                             </a-tooltip>
                         </span>
-                        <SortTree @onCheck="ids=>form.commodity_type_ids=ids" />
+                        <SortTree ref="sortTree" @onCheck="ids=>form.commodity_type_ids=ids" />
                     </a-form-model-item>
                     <a-form-model-item>
                         <span slot="label">
@@ -153,9 +158,12 @@
                                 <a-icon type="question-circle-o" />
                             </a-tooltip>
                         </span>
-                        <TagsSelect @change="onTagsChange" />
+                        <TagsSelect ref="tagsSelect" @change="onTagsChange" />
                     </a-form-model-item>
-                    <a-form-model-item>
+
+
+                    <!-- 2021/4/2 隐藏模板样式 -->
+                    <!-- <a-form-model-item>
                         <span slot="label">
                             模板样式
                             <a-tooltip title="设置商品详情页的展示方式" placement="right" style="color: orange;">
@@ -163,18 +171,17 @@
                             </a-tooltip>
                         </span>
                         <TemplateSelect />
-                    </a-form-model-item>
+                    </a-form-model-item> -->
                 </div>
             </div>
         </a-form-model>
     </div>
 </template>
 <script>
-    import { addNewCommodity } from '@/assets/api'
+    import { addNewCommodity, upDataCommodity } from '@/assets/api'
     const form = {
         name: '',//商品名称 string  *
-        // synopsis: ['', '', '', '', ''],//商品简介 json
-        synopsis: [{ content: '' }, { content: '' }, { content: '' }, { content: '' }, { content: '' }],
+        synopsis: [{ content: '' }, { content: '' }, { content: '' }, { content: '' }, { content: '' }],//商品简介 json
         product_description: '',//商品描述 string  *
         file_ids: [],//商品列表图 array  *
         main_img_url: null,//商品主图 暂无 file
@@ -188,6 +195,8 @@
         seo_description: '',//网页描述 string
         seo_url: '',//自定义url string
     }
+
+    const loadingForm = {}
 
     const checkFileIds = (rule, value, callback) => {
         if (value.length === 0) {
@@ -238,13 +247,22 @@
     ]
     export default {
         name: 'ProductForm',
+        props: {
+            isAdd: {//判断场景    创建||编辑  true||false
+                type: Boolean,
+                default: true
+            }
+        },
         data() {
 
             return {
                 form,
+                loadingForm,//编辑模式下的对照组
                 rules,
                 isShowOption,
-                ask: false
+                ask: false,
+                key: null,
+                saveCreateImageList:null,//保存未上传的图库
             }
         },
         computed: {
@@ -255,6 +273,7 @@
         methods: {
             onMidoChange(fileList) {
                 this.form.file_ids = fileList.map(item => item.uid)
+                localStorage.setItem('BWPRODUCT_ADD_FILE', JSON.stringify(fileList))
             },
             onArrtChange(val) {
                 this.form.attribute = val
@@ -293,10 +312,47 @@
                     }
                 });
             },
-            //上传数据
+            //验证编辑
+            onEitor() {
+                const loadingForm = this.form
+                const originalForm = this.loadingForm
+                this.$refs.productRuleForm.validate(valid => {
+                    if (valid && JSON.stringify(originalForm) !== JSON.stringify(loadingForm)) {
+                        let _this = this
+                        let filterForm = loadingForm
+                        filterForm = this.onFilterArr(filterForm)
+                        filterForm = this.onFilterNull(filterForm)
+                        if (this.ask) {
+                            this.$confirm({
+                                title: '警告',
+                                content: '检测到商品属性有部分项键值对未填写，继续上传将忽略未填写完整的键值对，是否继续？',
+                                okText: '继续上传',
+                                cancelText: '返回补全',
+                                onOk() {
+                                    _this.onUpLoadingEdior(filterForm)
+                                },
+                                onCancel() {
+                                    _this.ask = false
+                                    return
+                                },
+                            })
+                        } else {
+                            this.onUpLoadingEdior(filterForm)
+                        }
+                    } else if (valid && JSON.stringify(originalForm) === JSON.stringify(loadingForm)) {
+                        this.$message.error('未检测到任何信息变动，系统无法做出响应')
+                        console.log(loadingForm)
+                        console.log(originalForm)
+                    } else {
+                        this.$message.error('上传验证失败，请核对提示信息并作出修改')
+                        return false;
+                    }
+                })
+            },
+            //上传创建数据
             onUpLoading(filterForm) {
                 const data = this.appendFormData(filterForm)
-                addNewCommodity(data)
+                addNewCommodity(this.key, data)
                     .then(res => {
                         this.$notification.success({
                             message: `成功提醒`,
@@ -304,12 +360,41 @@
                                 `商品上传成功`,
                             placement: 'bottomRight',
                         });
+                        this.$emit('onClose', false)
+                        this.$emit('change')
                     })
                     .catch(err => {
                         this.$notification.error({
                             message: `失败提醒`,
                             description:
                                 `商品上传失败`,
+                            placement: 'bottomRight',
+                            duration: 0,
+                        });
+                    })
+                    .finally(() => {
+                        this.ask = false
+                    })
+            },
+            // 上传修改数据
+            onUpLoadingEdior(filterForm) {
+                const data = this.appendFormData(filterForm)
+                upDataCommodity(this.key, data)
+                    .then(res => {
+                        this.$notification.success({
+                            message: `成功提醒`,
+                            description:
+                                `商品编辑成功`,
+                            placement: 'bottomRight',
+                        });
+                        this.$emit('onClose', false)
+                        this.$emit('change')
+                    })
+                    .catch(err => {
+                        this.$notification.error({
+                            message: `失败提醒`,
+                            description:
+                                `商品编辑失败`,
                             placement: 'bottomRight',
                             duration: 0,
                         });
@@ -338,9 +423,9 @@
                         //     })
                         // }
                         // disposeData(key, filterForm[key], formData)
-                        
+
                         //2021/3/26 修改成以JSON.stringify
-                        formData.append(key,JSON.stringify(filterForm[key]))
+                        formData.append(key, JSON.stringify(filterForm[key]))
                     } else {
                         filterForm[key].forEach((item, index) => {
                             formData.append(`${key}[${index}]`, item)
@@ -361,7 +446,7 @@
                 }
                 return findForm
             },
-            //过滤空数组和空数组对象
+            //过滤空数组和空数组对象 
             onFilterArr(form) {
                 const findForm = Object.assign({}, form)
                 for (let key in findForm) {
@@ -382,7 +467,96 @@
                 }
                 return findForm
             },
+            // 编辑状态下转换null
+            onFilterNull(form) {
+                const findForm = Object.assign({}, form)
+                for (let key in findForm) {
+                    if (findForm[key] == null && key === 'main_img_url') {
+                        delete findForm[key]
+                    }
+                }
+                return findForm
+            },
+            // 重置表单
+            restform(formData) {
+                if (!formData) {
+                    this.form = {
+                        name: '',
+                        synopsis: [{ content: '' }, { content: '' }, { content: '' }, { content: '' }, { content: '' }],
+                        product_description: '',
+                        file_ids: [],
+                        main_img_url: null,
+                        attribute: null,
+                        isShow: 1,
+                        commodity_type_ids: [],
+                        attrSort: 0,
+                        tag_ids: [],
+                        seo_title: '',
+                        seo_description: '',
+                        seo_url: '',
+                    }
+                    this.$refs.editor.initialize('')//赋值 富文本
+                    this.$refs.mce.restFile([]) //赋值 媒体中心的图片
+                    this.$refs.moreAttribute.restAttribute(null) // 赋值 多属性的内容
+                    this.$refs.sortTree.restSortTree([]) // 赋值 产品分类
+                    this.$refs.tagsSelect.restTagesSelect(null) // 赋值 商品标签
+                } else {
+                    let {
+                        product_description,
+                        file_ids,
+                        attribute,
+                        commodity_type_ids,
+                        tag_ids,
+                    } = formData
+                    this.form = Object.assign({}, formData)
+                    this.$refs.editor.initialize(product_description)//赋值 富文本
+                    this.$refs.mce.restFile(file_ids) //赋值 媒体中心的图片
+                    this.$refs.moreAttribute.restAttribute(attribute) // 赋值 多属性的内容
+                    this.$refs.sortTree.restSortTree(commodity_type_ids) // 赋值 产品分类
+                    this.$refs.tagsSelect.restTagesSelect_planm_B(tag_ids) // 赋值 商品标签
+                }
+            },
 
+            /******************************************************供父组件调用的方法******************************************************/
+
+            saveForm() {
+                return this.form
+            },
+
+            clearValidate() {
+                this.$refs.productRuleForm.clearValidate()
+            },
+
+            editorForm({ id, name, product_description, synopsis, files, main_img_url, attribute, isShow, commodity_types, attrSort, tags, seo_title, seo_description, seo_url }) {
+                this.restform()
+                const formData = Object.assign({}, this.form)
+                formData.name = name || ''
+                formData.product_description = product_description || ''
+                formData.main_img_url = main_img_url || null
+                formData.isShow = isShow || 0
+                formData.attrSort = attrSort || 0
+                formData.seo_title = seo_title || ''
+                formData.seo_description = seo_description || ''
+                formData.seo_url = seo_url || ''
+                formData.commodity_type_ids = commodity_types.map(o => o.id) || []
+                formData.tag_ids = tags.map(o => o.id) || []
+                formData.file_ids = files.map(o => o.id) || []
+                formData.attribute = JSON.parse(attribute) || null
+                if (synopsis && synopsis !== 'null') {
+                    JSON.parse(synopsis).forEach((option, index) => {
+                        formData.synopsis[index] = option
+                    })
+                }
+                this.key = id //赋值 商品id
+                this.$refs.editor.initialize(product_description)//赋值 富文本
+                this.$refs.mce.restFile(files) //赋值 媒体中心的图片
+                this.$refs.moreAttribute.restAttribute(JSON.parse(attribute) || null) // 赋值 多属性的内容
+                this.$refs.sortTree.restSortTree(commodity_types) // 赋值 产品分类
+                this.$refs.tagsSelect.restTagesSelect(tags || 'null' || null) // 赋值 商品标签
+
+                this.form = formData
+                this.loadingForm = Object.assign({}, formData)//编辑模式下的对照组
+            },
         }
     }
 </script>

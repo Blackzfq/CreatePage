@@ -1,18 +1,245 @@
 <template>
-    <div class="BlogClassify">
-        BlogClassify
+    <div id="BlogClassify" ref="BlogClassify">
+        <a-row type="flex" justify="space-between">
+            <a-col :span="12">
+                <span style="font-size: 16px;">博客分类查询</span>
+                <a-icon type="reload" :spin="loading" style="margin-left: 15px;" @click="refreshData" />
+            </a-col>
+            <a-col :span="12" style="text-align: end;">
+                <span class="myTextButton">导入</span>
+                <span class="myTextButton">导出</span>
+                <a-button type="primary" @click="() => {redactKey = '';visible = true;modalTitle = '新建分类';}">
+                    添加分类
+                </a-button>
+            </a-col>
+        </a-row>
+        <a-divider />
+        <ListTable ref="listTable" scene="listTree" :columns="columns" :data="data" :pagination="pagination"
+            @eitor="onEitor" @fetch="onFetch" @remove="onRemove" />
+        <!-- 弹窗 -->
+        <a-modal v-model="visible" :footer="null" :getContainer="() => $refs.BlogClassify" width="1200px"
+            :bodyStyle="{ height: '700px', overflow: 'auto' }" centered destroyOnClose>
+            <span slot="title">
+                {{ modalTitle }}
+                <a-tag color="#2db7f5">
+                    {{ modalTitle | tagTipTitle }}
+                </a-tag>
+                <a-progress :percent="percent" size="small" status="active" style="margin-top:15px;" v-if="upLoading" />
+            </span>
+            <a-spin wrapperClassName="mywrapperClassName" :spinning="upLoading">
+                <a-icon slot="indicator" type="loading" style="font-size: 24px" spin />
+                <BlogSortForm :redactKey="redactKey" @refreshList="refreshData" @onpercent="val => {percent = val;}"
+                    @changeLoading="val => {upLoading = val;}" />
+            </a-spin>
+        </a-modal>
     </div>
 </template>
 <script>
-export default{
-    name:'BlogClassify',
-    data(){
-
-        return{
-
+    import { getBlogTypeList, delBlogType } from "@/assets/api";
+    const pagination = {
+        position: 'bottom',
+        pageSize: 10,//每页的条数
+        current: 1,//当前页
+    };
+    const data = [];
+    export default {
+        name: "BlogClassify",
+        data() {
+            return {
+                pagination,
+                data,
+                loading: false,
+                upLoading: false,
+                visible: false,
+                modalTitle: "",
+                percent: 0,
+                redactKey: ""
+            };
+        },
+        filters: {
+            tagTipTitle: function (val) {
+                let title;
+                switch (val) {
+                    case "新建分类":
+                        title = "正在创建";
+                        break;
+                    default:
+                        title = "正在编辑";
+                }
+                return title;
+            }
+        },
+        computed: {
+            columns() {
+                const columns = [
+                    {
+                        title: "名称",
+                        dataIndex: "title",
+                        width: "20%",
+                        // scopedSlots: {
+                        //     customRender: "name",
+                        //     filterDropdown: "filterNameDropdown",
+                        //     filterIcon: "searchIcon"
+                        // }
+                    },
+                    {
+                        title: "时间",
+                        dataIndex: "date",
+                        // scopedSlots: {
+                        //     filterDropdown: "filterDateDropdown",
+                        //     filterIcon: "filtereIcon"
+                        // }
+                    },
+                    {
+                        title: "置顶",
+                        dataIndex: "stick",
+                        scopedSlots: { customRender: "stick" }
+                    },
+                    {
+                        title: "功能区",
+                        dataIndex: "action",
+                        scopedSlots: { customRender: "action" }
+                    }
+                ];
+                return columns
+            }
+        },
+        mounted() {
+            this.getSortData();
+        },
+        methods: {
+            // *刷新当前列表内容
+            refreshData() {
+                this.visible = false;
+                this.loading = true;
+                this.getSortData();
+            },
+            // *进入编辑
+            onEitor(row) {
+                this.redactKey = row.key;
+                this.modalTitle = row.title;
+                this.visible = true;
+            },
+            //处理页码
+            async onFetch(params) {
+                await this.refreshData()
+                let { current } = params
+                const pageSize = Math.ceil(this.data.length / 10)
+                if (current > pageSize) {
+                    this.pagination = { ...Object.assign({}, params).current = pageSize }
+                } else {
+                    this.pagination = { ...params }
+                }
+            },
+            // *删除
+            onRemove(params) {
+                delBlogType(params.key)
+                    .then(() => {
+                        this.$notification.open({
+                            message: `成功通知`,
+                            description:
+                                `分类${params.title}已经成功删除`,
+                            placement: 'bottomRight',
+                        });
+                        this.refreshData()
+                    })
+                    .catch(err => {
+                        console.log(err.response)
+                        this.$notification.open({
+                            message: `失败通知`,
+                            description:
+                                `${err.response.status} ${err.response.data.message}`,
+                            placement: 'bottomRight',
+                        });
+                    })
+                    .finally(
+                        () => {
+                            this.loading = false
+                            this.$refs.listTable.changeLoading(false)
+                        }
+                    )
+            },
+            // *获取分类数据
+            getSortData() {
+                this.$refs.listTable.changeLoading(true);
+                getBlogTypeList()
+                    .then(({ data: { data: sortData } }) => {
+                        const gData = this.formattingData(sortData);
+                        this.data = gData;
+                    })
+                    .catch(() => {
+                        this.$notification.open({
+                            message: `失败通知`,
+                            description: `分类获取失败，正在为您尝试重新连接获取`,
+                            placement: "bottomRight"
+                        });
+                    })
+                    .finally(() => {
+                        this.loading = false;
+                        this.$refs.listTable.changeLoading(false);
+                    });
+            },
+            // *处理分类数据
+            formattingData(arr) {
+                const newArr = arr.map(item => {
+                    const sourceItem = {
+                        key: item.id,
+                        url: item.main_img_url,
+                        title: item.name,
+                        date: item.created_at,
+                        stick: item.attrSort ? "1" : "0"
+                    };
+                    if (item.twoLevelCommodityTypes || item.threeLevelCommodityTypes) {
+                        const params =
+                            item.twoLevelCommodityTypes || item.threeLevelCommodityTypes;
+                        if (params.length !== 0) {
+                            sourceItem.children = this.formattingData(params);
+                        }
+                    }
+                    return Object.assign({}, sourceItem);
+                });
+                return newArr;
+            }
         }
-    }
-}
+    };
 </script>
 <style scoped lang="scss">
+    #BlogClassify {
+        background-color: #fff;
+        padding: 24px;
+
+        .myTextButton {
+            padding-right: 40px;
+            cursor: pointer;
+            transition: all 0.3s;
+
+            &:hover {
+                color: #1890ff;
+            }
+        }
+
+        &::v-deep .aformmodel {
+            display: grid;
+            grid-template-columns: auto 200px;
+            grid-column-gap: 24px;
+
+            .right_form {
+                position: relative;
+
+                .right_form_content {
+                    position: sticky;
+                    top: 0;
+                }
+            }
+        }
+
+        /* loding的样式改写 */
+        .mywrapperClassName {
+            &::v-deep div {
+                .ant-spin {
+                    max-height: 100%;
+                }
+            }
+        }
+    }
 </style>

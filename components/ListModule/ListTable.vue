@@ -1,13 +1,18 @@
 <template>
     <div class="ListTable">
-        <div style="margin-bottom: 16px">
+        <div style="margin-bottom: 16px" v-if="scene==='list'">
             <a-dropdown placement="bottomLeft">
                 <a-button :loading="loading">批量操作</a-button>
                 <a-menu slot="overlay">
-                    <a-menu-item :disabled="!hasSelected">发布</a-menu-item>
-                    <a-menu-item :disabled="!hasSelected">草稿</a-menu-item>
-                    <a-menu-item :disabled="!hasSelected">归档</a-menu-item>
-                    <a-menu-item :disabled="!hasSelected">置顶</a-menu-item>
+                    <a-menu-item :disabled="!hasSelected" @click="$emit('batch','isShow',selectedRowKeys,1)">橱窗
+                    </a-menu-item>
+                    <a-menu-item :disabled="!hasSelected" @click="$emit('batch','isShow',selectedRowKeys,0)">仓库
+                    </a-menu-item>
+                    <a-menu-item :disabled="!hasSelected" @click="$emit('batch','attrSort',selectedRowKeys,0)">归档
+                    </a-menu-item>
+                    <a-menu-item :disabled="!hasSelected" @click="$emit('batch','attrSort',selectedRowKeys,1)">置顶
+                    </a-menu-item>
+                    <a-menu-item :disabled="!hasSelected" @click="onRemove(selectedRowKeys)">删除</a-menu-item>
                     <a-sub-menu key="test" title="一键操作" :disabled="hasSelected">
                         <a-menu-item>
                             一键上架
@@ -35,61 +40,33 @@
                     {{ `已选择 ${selectedRowKeys.length} 项` }}
                 </template>
             </span>
-            <!-- 筛选标签 -->
-            <span style="margin-left: 8px">
-                <a-tag color="#f50" closable v-if="goodsQuery.name" @close="log">
-                    {{goodsQuery.name}}
-                </a-tag>
-                <a-tag color="#2db7f5" v-if="goodsQuery.commodityTypeIds.length!==0"
-                    v-for="(tagitem,tagindex) in goodsQuery.commodityTypeIds" :key="tagitem" closable @close="log">
-                    {{tagitem}}
-                </a-tag>
-                <a-tag color="orange" v-if="goodsQuery.isShow" closable @close="log">
-                    {{goodsQuery.isShow|badgeText}}
-                </a-tag>
-            </span>
         </div>
         <a-table :columns="columns" :data-source="data" :pagination="pagination" :loading="loading"
-            :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }" @change="handleTableChange">
+            :row-selection="rowSelection" @change="handleTableChange">
             <!-------------------------------------------------------------------- 表头设置 ------------------------------------------------------>
             <!-- 搜索名称 -->
-            <div slot="filterNameDropdown" slot-scope="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }"
-                style="padding: 8px">
-                <a-input v-ant-ref="c => (searchInput = c)" v-model="goodsQuery.name" :placeholder="`搜索${column.title}`"
+            <div slot="filterNameDropdown" slot-scope="{confirm, clearFilters, column }" style="padding: 8px">
+                <a-input v-model="pagination.name||pagination.title" :placeholder="`搜索${column.title}`"
                     style="width: 188px; margin-bottom: 8px; display: block;" />
             </div>
             <!-- 搜索分类 -->
-            <div slot="filterSortDropdown" slot-scope="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }"
+            <div slot="filterSortDropdown" slot-scope="{confirm, clearFilters, column }"
                 style="padding: 8px;max-height: 300px;overflow: auto;">
-                <ClassifyTree @onCheck="onCheck" />
+                <SortTree :scene="sortTreeScene" @onCheck="(val)=>pagination.commodityTypeIds?pagination.commodityTypeIds=val:pagination.blogTypeIds=val" />
             </div>
             <!-- 排序筛选 -->
-            <div slot="filterDateDropdown" slot-scope="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }"
-                style="padding: 8px">
-                <a-radio-group style="display: block;">
-                    <a-radio :style="radioStyle" :value="1">
-                        按创建时间升序
-                    </a-radio>
-                    <a-radio :style="radioStyle" :value="2">
-                        按创建时间降序
-                    </a-radio>
-                    <a-radio :style="radioStyle" :value="3">
-                        按更新时间升序
-                    </a-radio>
-                    <a-radio :style="radioStyle" :value="4">
-                        按更新时间降序
+            <div slot="filterDateDropdown" slot-scope="{confirm, clearFilters, column }" style="padding: 8px">
+                <a-radio-group style="display: block;" v-model="pagination.time">
+                    <a-radio v-for="item in sortRadio" :key="item.value" :style="radioStyle" :value="item.value">
+                        {{item.label}}
                     </a-radio>
                 </a-radio-group>
             </div>
             <!-- 状态筛选 -->
-            <div slot="filterStateDropdown"
-                slot-scope="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }" style="padding: 8px">
-                <a-radio-group style="display: block;" v-model="goodsQuery.isShow">
-                    <a-radio :style="radioStyle" value="0">
-                        仓库
-                    </a-radio>
-                    <a-radio :style="radioStyle" value="1">
-                        橱窗
+            <div slot="filterStateDropdown" slot-scope="{confirm, clearFilters, column }" style="padding: 8px">
+                <a-radio-group style="display: block;" v-model="pagination.isShow">
+                    <a-radio v-for="item in isShowRadio" :key="item.value" :style="radioStyle" :value="item.value">
+                        {{item.label}}
                     </a-radio>
                 </a-radio-group>
             </div>
@@ -104,10 +81,10 @@
             <span slot="name" slot-scope="text,record">
                 <a-tooltip placement="top">
                     <template slot="title">
-                      <img :src="record.url" alt="" style="width: 100px;height: 100px;">
+                        <img :src="record.url" alt="" style="width: 100px;height: 100px;">
                     </template>
                     {{text}}
-                  </a-tooltip>
+                </a-tooltip>
             </span>
             <!-- 分类列 -->
             <span slot="classfly" slot-scope="text">
@@ -135,13 +112,13 @@
                     </a>
                     <a-menu slot="overlay">
                         <a-menu-item>
-                            <a href="javascript:;">复制</a>
+                            <a @click="$emit('clone',record)">复制</a>
                         </a-menu-item>
                         <a-menu-item>
-                            <a href="javascript:;" @click="$emit('eitor',record)">编辑</a>
+                            <a @click="$emit('eitor',record)">编辑</a>
                         </a-menu-item>
                         <a-menu-item>
-                            <a href="javascript:;">删除</a>
+                            <a @click="onRemove(record)">删除</a>
                         </a-menu-item>
                     </a-menu>
                 </a-dropdown>
@@ -157,18 +134,66 @@
         lineHeight: '30px'
     }
 
+    const sortRadio = [
+        {
+            value: '',
+            label: '默认排序'
+        },
+        {
+            value: 0,
+            label: '创建时间倒序'
+        },
+        {
+            value: 1,
+            label: '创建时间顺序'
+        },
+        {
+            value: 2,
+            label: '修改时间倒序'
+        },
+        {
+            value: 3,
+            label: '修改时间顺序'
+        }
+    ];
+
+    const isShowRadio = [
+        {
+            value: '',
+            label: "全部"
+        },
+        {
+            value: 0,
+            label: "仓库"
+        },
+        {
+            value: 1,
+            label: "橱窗"
+        },
+    ]
+
     export default {
         name: 'ListTable',
-        props:{
-            columns:{
-                type:Array,
-                default:function(){
+        props: {
+            scene: {
+                type: String,
+                default: 'list'// 列表|列表树  'list'|'listTree'
+            },
+            columns: {
+                type: Array,
+                default: function () {
                     return new Array()
                 }
             },
-            data:{
-                type:Array,
-                default:function(){
+            pagination: {
+                type: Object,
+                default: function () {
+                    return new Object()
+                }
+            },
+            data: {
+                type: Array,
+                default: function () {
                     return new Array()
                 }
             }
@@ -177,23 +202,27 @@
 
             return {
                 radioStyle,
-                pagination: {},
+                sortRadio,
+                isShowRadio,
                 loading: false,
                 selectedRowKeys: [],
-                goodsQuery: {},
             }
         },
         filters: {
             badgeColor: function (value) {
+                value += ''
                 return value === '1' ? 'processing' : 'default'
             },
             badgeText: function (value) {
+                value += ''
                 return value === '1' ? '橱窗' : '仓库'
             },
             stickColor: function (val) {
+                val += ''
                 return val === '1' ? '#f50' : '#87d068'
             },
             stickText: function (val) {
+                val += ''
                 return val === '1' ? '置顶中' : '默认'
             }
         },
@@ -201,73 +230,52 @@
             hasSelected() {
                 return this.selectedRowKeys.length > 0;
             },
-        },
-        mounted() {
-            // this.fetch();
-            // this.resetGoodsQuery()
+            rowSelection() {
+                let rowSelection
+                if(this.scene==='list'){
+                    rowSelection = { selectedRowKeys: this.selectedRowKeys, onChange: this.onSelectChange}
+                }else{
+                    rowSelection=null
+                }
+                return rowSelection
+            },
+            sortTreeScene(){
+                return this.pagination.blogTypeIds?'blog':'product'
+            }
         },
         methods: {
-            /*初始化*/
-            resetGoodsQuery(params = {}) {
-                const data = {
-                    isShow: '',
-                    name: '',
-                    commodityTypeIds: [],
-                    per_page: '15'
-                }
-                this.goodsQuery = Object.assign({}, data)
-            },
-            // 关闭tag标签
-            log(e) {
-                console.log(e);
-            },
             // 切换loading状态
-            changeLoading(val){
-                this.loading=val
+            changeLoading(val) {
+                this.loading = val
             },
-            handleTableChange(pagination, filters, sorter) {
-                console.log(pagination);
+            handleTableChange(pagination) {
                 const pager = { ...this.pagination };
                 pager.current = pagination.current;
-                this.pagination = pager;
-                this.fetch({
-                    results: pagination.pageSize,
-                    page: pagination.current,
-                    sortField: sorter.field,
-                    sortOrder: sorter.order,
-                    ...filters,
-                });
-            },
-            fetch(params = {}) {
-                this.loading = true;
-                const data = {
-                    results: 10,
-                    ...params
-                }
-                user_GetList("https://randomuser.me/api", data)
-                    .then(data => {
-                        console.log('成功')
-                        // const pagination = { ...this.pagination };
-                        // // Read total count from server
-                        // // pagination.total = data.totalCount;
-                        // pagination.total = 200;
-                        // this.loading = false;
-                        // this.data = data.results;
-                        // this.pagination = pagination;
-                    })
-                    .catch(err => {
-                        console.log('失败')
-                    })
-                    .finally(() => {
-                        this.loading = false;
-                    })
+                this.$emit('fetch', pager)
             },
             onSelectChange(selectedRowKeys) {
-                console.log('selectedRowKeys changed: ', selectedRowKeys);
                 this.selectedRowKeys = selectedRowKeys;
             },
-            onCheck(val) {
-                this.goodsQuery.commodityTypeIds = val
+            onRemove(record) {
+                const _this = this
+                this.$confirm({
+                    title: `您正在进行内容删除！`,
+                    content: '本次删除不可逆，请谨慎操作',
+                    okText: '删除',
+                    okType: 'danger',
+                    cancelText: '取消',
+                    onOk() {
+                        _this.$emit('remove', record)
+                    },
+                    onCancel() {
+                        _this.$notification.open({
+                            message: `已取消`,
+                            description:
+                                `操作已取消，内容不做任何更改`,
+                            placement: 'bottomRight',
+                        });
+                    },
+                });
             }
         },
     }
