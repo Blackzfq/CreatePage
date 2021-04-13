@@ -176,7 +176,7 @@ export function deleteCommoditiesSort(data) {
 // // ================商品操作================
 
 export function addNewCommodity(data) {
-    return Axios.post(`api/ad/commodities`, data)
+    return Axios.post(`api/ad/commodities`,data)
 }
 
 export function getCommodity(params) {

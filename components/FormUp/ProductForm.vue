@@ -352,11 +352,11 @@
             //上传创建数据
             onUpLoading(filterForm) {
                 const data = this.appendFormData(filterForm)
-                addNewCommodity(this.key, data)
+                addNewCommodity(data)
                     .then(res => {
                         this.$notification.success({
                             message: `成功提醒`,
-                            description:
+                            description: 
                                 `商品上传成功`,
                             placement: 'bottomRight',
                         });

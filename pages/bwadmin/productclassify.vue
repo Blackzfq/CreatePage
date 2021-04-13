@@ -15,7 +15,7 @@
         </a-row>
         <a-divider />
         <ListTable ref="listTable" scene="listTree" :columns="columns" :data="data" :pagination="pagination"
-            @eitor="onEitor" @fetch="onFetch" @remove="onRemove" />
+            @eitor="onEitor" @fetch="onFetch" @remove="onRemove" /> 
         <!-- 弹窗 -->
         <a-modal v-model="visible" :footer="null" :getContainer="()=>$refs.ProductClassify" width="1200px"
             :bodyStyle="{height:'700px',overflow:'auto'}" centered destroyOnClose>
@@ -29,7 +29,7 @@
             <a-spin wrapperClassName="mywrapperClassName" :spinning="upLoading">
                 <a-icon slot="indicator" type="loading" style="font-size: 24px" spin />
                 <SortForm :redactKey="redactKey" @onpercent="(val)=>{percent=val}"
-                    @changeLoading="(val)=>{upLoading=val}" />
+                    @changeLoading="(val)=>{upLoading=val}" @onClose="changeVisible"/>
             </a-spin>
         </a-modal>
     </div>
@@ -200,6 +200,10 @@
                     return Object.assign({}, sourceItem)
                 })
                 return newArr
+            },
+            /*********************************************************供子组件调用*********************************************************/
+            changeVisible(val) {
+                this.visible = val
             }
         }
     }

@@ -2,6 +2,7 @@
     <div class="HomeCms">
         HomeCms
     </div>
+
 </template>
 <script>
 export default{

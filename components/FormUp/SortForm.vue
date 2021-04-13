@@ -53,15 +53,15 @@
                 </a-form-model-item>
                 <a-form-model-item :wrapper-col="{span:12,offset:12}">
                     <a-button-group v-if="!redactKey">
-                        <a-button type="primary"  @click="onSubmit">
+                        <a-button type="primary" @click="onSubmit">
                             创建
                         </a-button>
-                        <a-button  @click="resetForm">
+                        <a-button @click="resetForm">
                             重置
                         </a-button>
                     </a-button-group>
                     <a-button-group v-else>
-                        <a-button type="primary"  @click="onEitor">
+                        <a-button type="primary" @click="onEitor">
                             编辑
                         </a-button>
                     </a-button-group>
@@ -113,7 +113,7 @@
     </div>
 </template>
 <script>
-    import { addNewCommoditiesSort, getCommoditiesSortDetails, upDataCommoditiesSort } from '@/assets/api' 
+    import { addNewCommoditiesSort, getCommoditiesSortDetails, upDataCommoditiesSort } from '@/assets/api'
     const form = {
         name: '',//分类名称
         main_img_url: '',//分类主图
@@ -121,10 +121,11 @@
         seo_title: '',//seo标题
         seo_description: '',//seo描述
         seo_url: '',//seo链接
-        attrSort: 0,//排序 0默认|1置顶
+        attrSort: 0,//排序 0默认|1置顶 
         type: 'oneLevel',//分类级别 oneLevel|twoLevel|threeLevel
         commodity_type_id: null,//父级id
     }
+    const loadingForm = {}
     const rules = {
         name: [
             { required: true, message: '分类名称不能为空', trigger: 'blur' },
@@ -152,6 +153,7 @@
 
             return {
                 form,
+                loadingForm,//编辑模式下的对照组
                 rules,
                 treeData,
             }
@@ -178,6 +180,7 @@
             // 初始化
             initialize() {
                 let _this = this
+                this.resetForm()
                 if (this.redactKey) {
                     // 编辑分类
                     const headerConfig = {
@@ -189,13 +192,16 @@
                     this.$emit('changeLoading', true)
                     getCommoditiesSortDetails(this.redactKey, headerConfig)
                         .then(({ data: { data: objData } }) => {
-                            this.form.name = objData.name
-                            this.form.seo_title = objData.seo_title
-                            this.form.seo_description = objData.seo_description
-                            this.form.seo_url = objData.seo_url
-                            this.form.attrSort = objData.attrSort ? 1 : 0
-                            this.form.type = objData.type
-                            this.form.commodity_type_id = objData.commodity_type_id
+                            const formData = Object.assign({}, this.form)
+                            formData.name = objData.name || ''
+                            formData.description = objData.description || ''
+                            formData.seo_title = objData.seo_title || ''
+                            formData.main_img_url = objData.main_img_url || ''
+                            formData.seo_description = objData.seo_description || ''
+                            formData.seo_url = objData.seo_url || ''
+                            formData.attrSort = objData.attrSort ? 1 : 0
+                            formData.type = objData.type || 'oneLevel'
+                            formData.commodity_type_id = objData.commodity_type_id || null
                             this.$refs.editor.initialize(objData.description)
                             this.$refs.upLoadFile.initialize([{
                                 uid: createdUid(),
@@ -204,6 +210,9 @@
                                 url: objData.main_img_url
                             }])
                             this.$refs.cascader.getSort(objData.id)
+                            this.form = formData
+                            this.loadingForm = Object.assign({}, this.form)//编辑模式下的对照组
+                            console.log(`本地:`, this.form, `源`, this.loadingForm)
                         })
                         .catch(() => {
                             this.$notification.open({
@@ -218,20 +227,6 @@
                             this.$emit('changeLoading', false)
                             this.$emit('onpercent', 0)
                         })
-                } else {
-                    // 创建分类
-                    const form = {
-                        name: '',//分类名称
-                        main_img_url: '',//分类主图
-                        description: '',//分类描述
-                        seo_title: '',//seo标题
-                        seo_description: '',//seo描述
-                        seo_url: '',//seo链接
-                        attrSort: 0,//排序 0默认|1置顶
-                        type: 'oneLevel',//分类级别 oneLevel|twoLevel|threeLevel
-                        commodity_type_id: null,//父级id
-                    }
-                    this.form = form
                 }
             },
             // 信息验证
@@ -279,7 +274,8 @@
             // 提交编辑
             onEitor() {
                 let _this = this
-                const filterForm = this.filterForm(this.form)
+                const loadingForm = this.form
+                const originalForm = this.loadingForm
                 const headerConfig = {
                     onUploadProgress(progress) {
                         let persent = Math.round(progress.loaded / progress.total) * 100  //上传进度百分比
@@ -287,35 +283,61 @@
                     }
                 }
                 this.$emit('changeLoading', true)
-                upDataCommoditiesSort(this.redactKey, filterForm, headerConfig)
-                    .then(() => {
-                        this.$notification.open({
-                            message: `更新成功通知`,
-                            description:
-                                `商品分类 ${this.form.name} 已成功更新`,
-                            placement: 'bottomRight',
-                        });
-                    })
-                    .catch(() => {
-                        this.$notification.open({
-                            message: `更新失败提醒`,
-                            description:
-                                `商品分类 ${this.form.name} 更新失败，请重新提交上传`,
-                            placement: 'bottomRight',
-                            duration: 0,
-                        });
-                    })
-                    .finally(() => {
+                this.$refs.sortForm.validate(valid => {
+                    if (valid && JSON.stringify(originalForm) !== JSON.stringify(loadingForm)) {
+                        let filterForm = loadingForm
+                        filterForm = this.onFilter(filterForm)
+                        upDataCommoditiesSort(this.redactKey, filterForm, headerConfig)
+                            .then(() => {
+                                this.$notification.open({
+                                    message: `更新成功通知`,
+                                    description:
+                                        `商品分类 ${this.form.name} 已成功更新`,
+                                    placement: 'bottomRight',
+                                })
+                                this.$emit('onClose', false)
+                            })
+                            .catch(() => {
+                                this.$notification.open({
+                                    message: `更新失败提醒`,
+                                    description:
+                                        `商品分类 ${this.form.name} 更新失败，请重新提交上传`,
+                                    placement: 'bottomRight',
+                                    duration: 0,
+                                });
+                            })
+                            .finally(() => {
+                                this.$emit('changeLoading', false)
+                                this.$emit('onpercent', 0)
+                            })
+                    } else if (valid && JSON.stringify(originalForm) === JSON.stringify(loadingForm)) {
                         this.$emit('changeLoading', false)
-                        this.$emit('onpercent', 0)
-                    })
+                        this.$message.error('未检测到任何信息变动，系统无法做出响应')
+                    } else {
+                        this.$emit('changeLoading', false)
+                        this.$message.error('上传验证失败，请核对提示信息并作出修改')
+                        return false;
+                    }
+                })
             },
             // 信息重置
             resetForm() {
+                const form = {
+                    name: '',//分类名称
+                    main_img_url: '',//分类主图
+                    description: '',//分类描述
+                    seo_title: '',//seo标题
+                    seo_description: '',//seo描述
+                    seo_url: '',//seo链接
+                    attrSort: 0,//排序 0默认|1置顶
+                    type: 'oneLevel',//分类级别 oneLevel|twoLevel|threeLevel
+                    commodity_type_id: null,//父级id
+                }
                 this.$refs.sortForm.resetFields();
                 this.$refs.editor.initialize()
                 this.$refs.upLoadFile.initialize()
                 this.$refs.cascader.initialize()
+                this.form = form
             },
             // 过滤未填写信息
             filterForm(obj) {
@@ -323,6 +345,17 @@
                 for (let i in obj) {
                     if (obj[i] || obj[i] === 0) {
                         formData.append(i, obj[i])
+                    }
+                }
+                return formData
+            },
+            // 提交修改后的信息
+            onFilter(form) {
+                const formData = new FormData()
+                const findForm = Object.assign({}, form)
+                for (let key in findForm) {
+                    if (findForm[key] !== this.loadingForm[key]) {
+                        formData.append(key, findForm[key])
                     }
                 }
                 return formData
@@ -347,7 +380,13 @@
             },
             //分类主图改变回调
             onFileChange(fileList) {
-                this.form.main_img_url = fileList[0] ? fileList[0].file : ''
+                if (fileList[0] && fileList[0].file) {
+                    this.form.main_img_url = fileList[0].file
+                } else if (fileList[0] && fileList[0].url) {
+                    this.form.main_img_url = fileList[0].url
+                } else {
+                    this.form.main_img_url = ''
+                }
             },
             //是否置顶
             onSwitchChange(checked) {
